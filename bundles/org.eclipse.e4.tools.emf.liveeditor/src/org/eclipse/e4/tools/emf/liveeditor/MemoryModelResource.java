@@ -13,11 +13,13 @@ package org.eclipse.e4.tools.emf.liveeditor;
 
 import org.eclipse.core.databinding.observable.list.IObservableList;
 import org.eclipse.core.databinding.observable.list.WritableList;
+import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.e4.tools.emf.ui.common.IModelResource;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.emf.common.command.BasicCommandStack;
+import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
@@ -58,6 +60,18 @@ public class MemoryModelResource implements IModelResource {
 	}
 
 	public void removeModelListener(ModelListener listener) {
+		
+	}
+
+	public IMarker createMarker() {
+		return null;
+	}
+
+	public void clearMarkers() {
+		
+	}
+
+	public void replaceRoot(EObject eobject) {
 		
 	}
 }
