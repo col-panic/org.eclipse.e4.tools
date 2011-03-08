@@ -9,5 +9,12 @@
             class="org.eclipse.e4.tools.emf.liveeditor.ModelProcessor">
       </processor>
    </extension>
+   <extension
+         point="org.eclipse.e4.tools.emf.ui.scripting">
+      <scripting
+            class="org.eclipse.e4.tools.emf.liveeditor.JavaScriptSupport"
+            label="JavaScript">
+      </scripting>
+   </extension>
 
 </plugin>
