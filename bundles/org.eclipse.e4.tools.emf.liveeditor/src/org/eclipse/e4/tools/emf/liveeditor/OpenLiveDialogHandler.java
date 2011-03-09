@@ -40,6 +40,7 @@ public class OpenLiveDialogHandler {
 				this.shell = new Shell(s,SWT.SHELL_TRIM);
 				//FIXME Style
 				this.shell.setBackground(shell.getDisplay().getSystemColor(SWT.COLOR_WHITE)); 
+				this.shell.setBackgroundMode(SWT.INHERIT_DEFAULT);
 				FillLayout layout = new FillLayout();
 				layout.marginHeight=10;
 				layout.marginWidth=10;
