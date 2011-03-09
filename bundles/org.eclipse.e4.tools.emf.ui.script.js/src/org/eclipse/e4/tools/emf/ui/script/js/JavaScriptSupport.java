@@ -8,7 +8,7 @@
  * Contributors:
  *     Tom Schindl <tom.schindl@bestsolution.at> - initial API and implementation
  ******************************************************************************/
-package org.eclipse.e4.tools.emf.liveeditor;
+package org.eclipse.e4.tools.emf.ui.script.js;
 
 import java.util.Map;
 
@@ -27,8 +27,6 @@ import org.mozilla.javascript.Scriptable;
 import org.mozilla.javascript.ScriptableObject;
 
 public class JavaScriptSupport implements IScriptingSupport {
-	private String script;
-	
 	public void openEditor(Shell shell, final Object mainElement, final Map<String, Object> additionalData) {
 		TitleAreaDialog dialog = new TitleAreaDialog(shell) {
 			private Text scriptField;
