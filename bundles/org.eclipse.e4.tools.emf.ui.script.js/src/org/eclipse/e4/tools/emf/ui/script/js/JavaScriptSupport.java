@@ -15,6 +15,7 @@ import java.util.Map;
 import org.eclipse.e4.tools.emf.ui.common.IScriptingSupport;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
+import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
@@ -39,6 +40,7 @@ public class JavaScriptSupport implements IScriptingSupport {
 				setMessage("Enter some JavaScript and execute it");
 				scriptField = new Text(container, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
 				scriptField.setLayoutData(new GridData(GridData.FILL_BOTH));
+				scriptField.setFont(JFaceResources.getTextFont());
 				return container;
 			}
 			
