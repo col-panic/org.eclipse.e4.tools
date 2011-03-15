@@ -10,7 +10,6 @@
  ******************************************************************************/
 package org.eclipse.e4.tools.emf.ui.script.js;
 
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.annotation.Annotation;
@@ -21,11 +20,14 @@ import org.eclipse.e4.core.contexts.ContextInjectionFactory;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.tools.emf.ui.common.IScriptingSupport;
+import org.eclipse.e4.tools.emf.ui.script.js.text.JavaScriptEditor;
 import org.eclipse.e4.ui.services.IStylingEngine;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.resource.JFaceResources;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.DisposeEvent;
+import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
@@ -51,10 +53,12 @@ import org.osgi.service.packageadmin.PackageAdmin;
 @SuppressWarnings({ "restriction", "deprecation" })
 public class JavaScriptSupport implements IScriptingSupport {
 	public void openEditor(Shell shell, final Object mainElement, final IEclipseContext context) {
+		final IEclipseContext childContext = context.createChild();
+		
 		TitleAreaDialog dialog = new TitleAreaDialog(shell) {
-			private Text scriptField;
+			private JavaScriptEditor editor;
 			private Logger logger;
-
+			
 			@Override
 			protected Control createDialogArea(Composite parent) {
 				Composite container = (Composite) super.createDialogArea(parent);
@@ -62,16 +66,22 @@ public class JavaScriptSupport implements IScriptingSupport {
 				getShell().setText("Execute JavaScript");
 				setTitle("Execute JavaScript");
 				setMessage("Enter some JavaScript and execute it");
-				scriptField = new Text(container, SWT.BORDER | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
-				scriptField.setLayoutData(new GridData(GridData.FILL_BOTH));
-				scriptField.setFont(JFaceResources.getTextFont());
+				
+				childContext.set(Composite.class, container);
+				
+				editor = ContextInjectionFactory.make(JavaScriptEditor.class, childContext);
+				GridData gd = new GridData(GridData.FILL_BOTH);
+				gd.minimumHeight = 350;
+				gd.minimumWidth = 400;
+				editor.getControl().setLayoutData(gd);
 				return container;
 			}
 			
 			@Override
 			protected void okPressed() {
-				execute(logger, mainElement, context, scriptField.getText());
+				execute(logger, mainElement, context, editor.getContent());
 			}
+			
 			
 			@Override
 			protected Button createButton(Composite parent, int id,
@@ -81,6 +91,7 @@ public class JavaScriptSupport implements IScriptingSupport {
 		};
 		
 		dialog.open();
+		childContext.dispose();
 	}
 
 	private void execute(Logger logger, Object mainElement, IEclipseContext context, String script) {
@@ -197,6 +208,14 @@ public class JavaScriptSupport implements IScriptingSupport {
 				text.setFont(JFaceResources.getTextFont());
 				text.setEditable(false);
 				shell.setVisible(true);
+				shell.addDisposeListener(new DisposeListener() {
+					
+					@Override
+					public void widgetDisposed(DisposeEvent e) {
+						shell = null;
+						text = null;
+					}
+				});
 			}
 		}
 		
