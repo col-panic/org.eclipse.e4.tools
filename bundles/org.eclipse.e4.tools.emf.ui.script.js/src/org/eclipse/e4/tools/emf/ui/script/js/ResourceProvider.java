@@ -13,6 +13,8 @@ package org.eclipse.e4.tools.emf.ui.script.js;
 import org.eclipse.e4.tools.services.BasicResourceProvider;
 
 public class ResourceProvider extends BasicResourceProvider {
+	public static String IMG_WIZBAN_JAVASCRIPT = "IMG_org.eclipse.e4.tools.emf.ui.script.js.wizban_javascript";
+	
 	public static String JAVA_KEYWORD = "COLOR_org.eclipse.e4.tools.emf.ui.script.js.java_keyword"; //$NON-NLS-1$
 
 	public static String JAVA_DEFAULT = "COLOR_org.eclipse.e4.tools.emf.ui.script.js.java_default"; //$NON-NLS-1$

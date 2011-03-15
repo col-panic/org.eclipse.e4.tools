@@ -67,7 +67,7 @@ public class JavaScriptSupport implements IScriptingSupport {
 				getShell().setText("Execute JavaScript");
 				setTitle("Execute JavaScript");
 				setMessage("Enter some JavaScript and execute it");
-				setTitleImage(context.get(IResourcePool.class).getImageUnchecked(ResourceProvider.IMG_WIZBAN_JAVASCRIPT));
+				setTitleImage(childContext.get(IResourcePool.class).getImageUnchecked(ResourceProvider.IMG_WIZBAN_JAVASCRIPT));
 				
 				childContext.set(Composite.class, container);
 				
