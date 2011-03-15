@@ -33,8 +33,7 @@ public class OpenLiveDialogHandler {
 	}
 
 	@Execute
-	public void run(@Named(IServiceConstants.ACTIVE_SHELL) Shell s,
-			IEclipseContext c, MApplication application, IStylingEngine engine) {
+	public void run(@Named(IServiceConstants.ACTIVE_SHELL) Shell s, MApplication application, IStylingEngine engine) {
 		if (this.shell == null || this.shell.isDisposed()) {
 			try {
 				this.shell = new Shell(s,SWT.SHELL_TRIM);
@@ -45,7 +44,8 @@ public class OpenLiveDialogHandler {
 				layout.marginHeight=10;
 				layout.marginWidth=10;
 				this.shell.setLayout(layout);
-				final IEclipseContext childContext = c
+				
+				final IEclipseContext childContext = application.getContext()
 						.createChild("EditorContext");
 				MemoryModelResource resource = new MemoryModelResource(application);
 				childContext.set(IModelResource.class, resource);
