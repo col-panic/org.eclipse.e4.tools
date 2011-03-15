@@ -21,6 +21,7 @@ import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.tools.emf.ui.common.IScriptingSupport;
 import org.eclipse.e4.tools.emf.ui.script.js.text.JavaScriptEditor;
+import org.eclipse.e4.tools.services.IResourcePool;
 import org.eclipse.e4.ui.services.IStylingEngine;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -66,6 +67,7 @@ public class JavaScriptSupport implements IScriptingSupport {
 				getShell().setText("Execute JavaScript");
 				setTitle("Execute JavaScript");
 				setMessage("Enter some JavaScript and execute it");
+				setTitleImage(context.get(IResourcePool.class).getImageUnchecked(ResourceProvider.IMG_WIZBAN_JAVASCRIPT));
 				
 				childContext.set(Composite.class, container);
 				
