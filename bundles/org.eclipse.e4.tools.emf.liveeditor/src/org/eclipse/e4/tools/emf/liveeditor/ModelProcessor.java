@@ -16,6 +16,7 @@ import org.eclipse.e4.ui.model.application.commands.MCommand;
 import org.eclipse.e4.ui.model.application.commands.MCommandsFactory;
 import org.eclipse.e4.ui.model.application.commands.MHandler;
 import org.eclipse.e4.ui.model.application.commands.MKeyBinding;
+import org.eclipse.e4.ui.model.application.descriptor.basic.MPartDescriptor;
 
 public class ModelProcessor {
 	
@@ -38,5 +39,17 @@ public class ModelProcessor {
 		if( application.getBindingTables().size() > 0 ) {
 			application.getBindingTables().get(0).getBindings().add(binding);	
 		}
+		
+		MPartDescriptor descriptor = org.eclipse.e4.ui.model.application.descriptor.basic.MBasicFactory.INSTANCE.createPartDescriptor();
+		descriptor.setCategory("org.eclipse.e4.secondaryDataStack");
+		descriptor.setElementId("org.eclipse.e4.tools.emf.liveeditor.view");
+		descriptor.getTags().add("View");
+		descriptor.getTags().add("categoryTag:General");
+		
+		descriptor.setLabel("Live Application Model");
+		descriptor.setContributionURI("platform:/plugin/org.eclipse.e4.tools.emf.liveeditor/org.eclipse.e4.tools.emf.liveeditor.LivePartDelegator");
+		descriptor.setContributorURI("platform:/plugin/org.eclipse.e4.tools.emf.liveeditor");
+		descriptor.setIconURI("platform:/plugin/org.eclipse.e4.tools.emf.liveeditor/icons/full/obj16/application_lightning.png");
+		application.getDescriptors().add(descriptor);
 	}
 }
