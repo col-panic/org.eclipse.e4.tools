@@ -23,6 +23,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.edit.domain.AdapterFactoryEditingDomain;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.emf.edit.provider.ComposedAdapterFactory;
+import org.eclipse.emf.edit.provider.ReflectiveItemProviderAdapterFactory;
 
 public class MemoryModelResource implements IModelResource {
 	private WritableList list = new WritableList();
@@ -32,6 +33,7 @@ public class MemoryModelResource implements IModelResource {
 		list.add(application);
 		BasicCommandStack commandStack = new BasicCommandStack();
 		ComposedAdapterFactory adapterFactory = new ComposedAdapterFactory(ComposedAdapterFactory.Descriptor.Registry.INSTANCE);
+		adapterFactory.addAdapterFactory(new ReflectiveItemProviderAdapterFactory());
 		editingDomain = new AdapterFactoryEditingDomain(adapterFactory, commandStack);
 	}
 	
