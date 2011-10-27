@@ -3,7 +3,12 @@
  */
 package org.eclipse.e4.ui;
 
+import org.eclipse.e4.ui.syntaxcoloring.CSSAntlrToAttribute;
+import org.eclipse.e4.ui.syntaxcoloring.CSSHighlightingConfiguration;
+import org.eclipse.e4.ui.syntaxcoloring.CSSSemanticHighlightCalculator;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.eclipse.xtext.ui.editor.syntaxcoloring.IHighlightingConfiguration;
+import org.eclipse.xtext.ui.editor.syntaxcoloring.ISemanticHighlightingCalculator;
 
 /**
  * Use this class to register components to be used within the IDE.
@@ -12,4 +17,15 @@ public class CSSUiModule extends org.eclipse.e4.ui.AbstractCSSUiModule {
 	public CSSUiModule(AbstractUIPlugin plugin) {
 		super(plugin);
 	}
+	public Class<? extends IHighlightingConfiguration> bindILexicalHighlightingConfiguration() {
+		return CSSHighlightingConfiguration.class;
+	}
+	
+	public Class<? extends org.eclipse.xtext.ui.editor.syntaxcoloring.AbstractAntlrTokenToAttributeIdMapper> bindAbstractAntlrTokenToAttributeIdMapper() {
+		return CSSAntlrToAttribute.class;
+	}
+	
+	public Class<? extends ISemanticHighlightingCalculator> bindSemanticHighlightingCalculator() {
+	    return CSSSemanticHighlightCalculator.class;
+	  }
 }

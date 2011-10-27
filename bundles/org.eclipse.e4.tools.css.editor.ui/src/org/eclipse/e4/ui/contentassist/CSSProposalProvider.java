@@ -3,10 +3,122 @@
 */
 package org.eclipse.e4.ui.contentassist;
 
-import org.eclipse.e4.ui.contentassist.AbstractCSSProposalProvider;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.RegistryFactory;
+import org.eclipse.e4.cSS.selector;
+import org.eclipse.e4.cSS.impl.RulesImpl;
+import org.eclipse.e4.ui.css.core.engine.CSSEngine;
+import org.eclipse.e4.ui.css.swt.internal.theme.ThemeEngine;
+import org.eclipse.emf.common.util.EList;
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.xtext.RuleCall;
+import org.eclipse.xtext.ui.editor.contentassist.ContentAssistContext;
+import org.eclipse.xtext.ui.editor.contentassist.ICompletionProposalAcceptor;
 /**
  * see http://www.eclipse.org/Xtext/documentation/latest/xtext.html#contentAssist on how to customize content assistant
  */
 public class CSSProposalProvider extends AbstractCSSProposalProvider {
-
+	
+	String[] completions;
+	boolean init = false;
+	CSSEngine engine;
+	
+	void init() {
+		IExtensionRegistry registry = RegistryFactory.getRegistry();
+		IExtensionPoint extPoint = registry
+				.getExtensionPoint("org.eclipse.e4.ui.css.swt.property.handler");
+		ArrayList<IConfigurationElement> matchingElements = new ArrayList<IConfigurationElement>();
+		ArrayList<IConfigurationElement> controlAdapters = new ArrayList<IConfigurationElement>();
+		for (IExtension e : extPoint.getExtensions()) {
+			IConfigurationElement[] elements = e.getConfigurationElements();
+			for (int i = 0; i < elements.length; i++) {
+				IConfigurationElement element = elements[i];
+				controlAdapters.add(element);
+				IConfigurationElement[] child = element.getChildren("property-name");
+				for (int j = 0; j < child.length; j++) {
+					matchingElements.add(child[j]);
+				}
+			}
+		}
+		completions = new String[matchingElements.size()];
+		Iterator iter = matchingElements.iterator();
+		int counter = 0;
+		while (iter.hasNext()) {
+			IConfigurationElement type = (IConfigurationElement) iter.next();
+			completions[counter] = type.getAttribute("name");
+			counter++;
+		}
+		
+		Object themeEngine = Display.getCurrent().getData("org.eclipse.e4.ui.css.swt.theme");
+		if (themeEngine instanceof ThemeEngine) {
+			engine = ((ThemeEngine) themeEngine).getCSSEngine();
+		}
+//		Shell[] shells = Display.getCurrent().getShells();
+//		if (shells.length > 0) {
+//			//This is from AbstractPartRenderer, should be in IPresentationEngine
+//			String OWNING_ME = "modelElement"; //$NON-NLS-1$
+//			Object obj = null;
+//			for (int i = 0; i < shells.length; i++) {
+//				obj = shells[i].getData(OWNING_ME);
+//				if (obj != null) break;
+//			}
+//			if (obj != null && obj instanceof MTrimmedWindow) {
+//				MTrimmedWindow context = (MTrimmedWindow) obj;
+//				IStylingEngine stylingengine = (IStylingEngine) context.getContext().get(IStylingEngine.SERVICE_NAME);
+//				engine = (CSSEngine) stylingengine.getEngine();
+//			}
+//		}
+//		IEclipseContext context = application.getContext();
+//		IStylingEngine engine = (IStylingEngine) context
+//				.get(IStylingEngine.SERVICE_NAME);
+//		
+		init = true;
+//		for (IExtension e : extPoint.getExtensions()) {
+//			for (IConfigurationElement ce : getPlatformMatches(e
+//					.getConfigurationElements())) {
+//				if (ce.getName().equals("theme")) {
+	}
+@Override
+public void complete_declaration(EObject model, RuleCall ruleCall,
+		ContentAssistContext context, ICompletionProposalAcceptor acceptor) {
+	if (!init) init();
+//	DocumentCSS doc = engine.getDocumentCSS();
+//	StyleSheetList sslist = doc.getStyleSheets();
+//	for (int i = 0; i < sslist.getLength(); i++) {
+//		StyleSheet ss = sslist.item(i);
+//	}
+//	ViewCSS view = engine.getViewCSS();
+	
+	RulesImpl test = (RulesImpl) model;
+	EList<selector> sel = test.getSelectors();
+	String[] calCompletions = null;
+//	for (Iterator iterator = sel.iterator(); iterator.hasNext();) {
+//		selector selector = (selector) iterator.next();
+//		simple_selector selectors = selector.getSimpleselectors();
+//		element_name name = selectors.getElement();
+//		if (name != null) {
+//			//look for element name in provider
+//			if (engine instanceof CSSSWTEngineImpl) {
+//				calCompletions = ((CSSSWTEngineImpl) engine).retrieveCSSPropertiesForElement(name.getName());
+//			}
+//		}
+//		
+//		//if id or classname, look
+////		String elementName = name.getName();
+////		engine.getCSSCompositePropertiesNames(elementName);
+////		
+//////		ep.getElement(element, engine)
+//	}
+	String[] iter = calCompletions == null ? completions : calCompletions;
+	for (int i = 0; i < iter.length; i++) {
+		acceptor.accept(createCompletionProposal(iter[i], context));
+	}
+}
 }
