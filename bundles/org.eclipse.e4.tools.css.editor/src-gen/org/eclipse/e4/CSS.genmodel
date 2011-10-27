@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<genmodel:GenModel xmi:version="2.0"
+    xmlns:xmi="http://www.omg.org/XMI" xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore"
+    xmlns:genmodel="http://www.eclipse.org/emf/2002/GenModel" modelDirectory="/org.eclipse.e4.tools.css.editor/src-gen"
+    editDirectory="/org.eclipse.e4.tools.css.editor.edit/src" editorDirectory="/org.eclipse.e4.tools.css.editor.editor/src"
+    modelPluginID="org.eclipse.e4.tools.css.editor" forceOverwrite="true" modelName="CSS"
+    updateClasspath="false" rootExtendsClass="org.eclipse.emf.ecore.impl.MinimalEObjectImpl$Container"
+    complianceLevel="5.0" copyrightFields="false" editPluginID="org.eclipse.e4.tools.css.editor.edit"
+    editorPluginID="org.eclipse.e4.tools.css.editor.editor">
+  <genPackages prefix="CSS" basePackage="org.eclipse.e4" disposableProviderFactory="true"
+      ecorePackage="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#/">
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//stylesheet">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//stylesheet/location"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//stylesheet/importName"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//stylesheet/ruleset"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//Rules">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//Rules/selectors"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//Rules/declarations"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//css_import">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//css_import/string_name"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//selector">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//selector/simpleselectors"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//selector/combinator"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//selector/selector"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//simple_selector">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//simple_selector/element"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//simple_selector/id"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//simple_selector/pseudo"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//pseudo">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//pseudo/name"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//pseudo/function"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//element_name">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//element_name/name"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//declaration">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//declaration/property"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//declaration/expr"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//declaration/priority"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//expr">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//expr/term"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//expr/operators"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term/unary"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term/number"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term/name"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term/id"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term/uri"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term/color"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//term/function"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//function">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//function/name"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//function/expr"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//URI">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//URI/name"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//URI/id"/>
+    </genClasses>
+    <genClasses ecoreClass="platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//css_hash_class">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//css_hash_class/type"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute platform:/resource/org.eclipse.e4.tools.css.editor/src-gen/org/eclipse/e4/CSS.ecore#//css_hash_class/name"/>
+    </genClasses>
+  </genPackages>
+</genmodel:GenModel>

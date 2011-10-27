@@ -1,0 +1,90 @@
+grammar org.eclipse.e4.CSS with org.eclipse.xtext.common.Terminals
+
+generate cSS "http://www.eclipse.org/e4/CSS"
+
+stylesheet:
+	location=STRING?
+	(importName+=css_import)*
+	(ruleset+=Rules)*
+	;
+
+Rules:
+	selectors+=selector (',' selectors+=selector )*
+    '{' declarations+=declaration? ( ';' declarations+=declaration? )* '}'
+  ;
+  
+  
+css_import:
+ '@import' (string_name=STRING | URI) ';'	
+;
+
+selector hidden():
+  	simpleselectors=simple_selector ( combinator=combinator  selector=selector | WS+ ( combinator=combinator? selector=selector )? )?
+  ;
+  
+ 
+ simple_selector: 
+	(element=element_name id+=css_hash_class* pseudo+=pseudo*) | (id+=css_hash_class+) 
+  ;
+   
+
+pseudo: 
+	':' name=ident | function=function name=ident?
+  ;
+
+element_name: (name=ident | name='*')
+  ;
+  
+ declaration
+  : property=ident ':' expr=expr priority="!important"?
+  ;
+  
+ expr
+  : term+=term ( operators+= ('/' | ',')? term+=term )*
+  ;
+  
+  
+  term: unary=unary_operator?
+    number= unary_numbers | name=STRING  | id=ident  | uri=URI  | color=hexdigits | function=function
+  ;
+ 
+ function
+  : name=ident '(' expr=expr ')'
+  ;
+  
+URI: 
+'url''(' {URI}(name+=STRING | (('\\' |'/')(id+=ident)) )*('.'id+=ident)? ')';
+
+unary_numbers:
+	INT | PERCENTAGE | LENGTH | EMS | EXS | ANGLE | TIME | FREQ
+;
+PERCENTAGE: INT '%';
+EMS: INT 'em';
+EXS: INT 'ex';
+LENGTH hidden(): INT ('px' | 'cm' | 'mm' | 'in' | 'pt' | 'pc' ) ;
+
+ANGLE: INT ('deg' | 'rad' | 'grad' );
+TIME: INT ('ms'| 's' );
+FREQ: INT ('hz' | 'khz');
+
+  
+
+ css_hash_class :
+	type=('#' | '.') name=ident
+;
+
+terminal hexdigits: '#' ('0' .. '9' | 'a'..'f' | 'A'..'F')+
+;
+
+terminal ident:
+ ('_' | '-' |  'a'..'z' | 'A'..'Z' ) ('_' | '-' | 'a'..'z' | 'A'..'Z' | '0'..'9' )*
+;
+
+combinator hidden(WS): '+'
+  | '>'
+  ;
+unary_operator
+  : '-' | '+'
+  ;
+
+  
