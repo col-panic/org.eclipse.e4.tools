@@ -186,6 +186,15 @@
             class="org.eclipse.e4.ui.CSSExecutableExtensionFactory:org.eclipse.xtext.ui.editor.quickfix.MarkerResolutionGenerator">
       </markerResolutionGenerator>
    </extension>
+   <extension
+         point="org.eclipse.ui.internalTweaklets">
+      <tweaklet
+            definition="org.eclipse.ui.internal.tweaklets.PreferencePageEnhancer"
+            id="org.eclipse.e4.tools.css.editor.ui.tweaklet"
+            implementation="org.eclipse.e4.ui.preferences.CSSEditorPreferences"
+            name="CSS Editor">
+      </tweaklet>
+   </extension>
 
 
 </plugin>
