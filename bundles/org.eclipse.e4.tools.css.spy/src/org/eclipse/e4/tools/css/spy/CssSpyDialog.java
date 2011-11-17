@@ -188,34 +188,17 @@ public class CssSpyDialog extends Dialog {
 		cssPropertiesViewer.setInput(selected);
 
 		StringBuilder sb = new StringBuilder();
-		sb.append("CSS Element: ").append(element.getClass().getName());
-		if (element.getCSSStyle() != null) {
-			sb.append("\nCSS Inline Style(s):\n ");
-			Activator.join(sb, element.getCSSStyle().split(";"), ";\n ");
-		}
-
-		if (element.getStaticPseudoInstances().length > 0) {
-			sb.append("\nStatic Pseudoinstances:\n ");
-			Activator.join(sb, element.getStaticPseudoInstances(), "\n ");
-		}
-
-		if (element.getCSSClass() != null) {
-			sb.append("\n\nCSS Classes:\n ");
-			Activator.join(sb, element.getCSSClass().split(" +"), "\n ");
-		}
-
-		// FIXME: shouldn't this be getCSSStyle?
-		if (element.getAttribute("style") != null) {
-			sb.append("\n\nSWT Style Bits:\n ");
-			Activator
-					.join(sb, element.getAttribute("style").split(" +"), "\n ");
-		}
-
 		CSSEngine engine = getCSSEngine(element);
 		CSSStyleDeclaration decl = engine.getViewCSS().getComputedStyle(
 				element, null);
+
+		if (element.getCSSStyle() != null) {
+			sb.append("\nCSS Inline Style(s):\n  ");
+			Activator.join(sb, element.getCSSStyle().split(";"), ";\n  ");
+		}
+
 		if (decl != null) {
-			sb.append("\n\nCSS Rules:\n");
+			sb.append("\n\nCSS Properties:\n");
 			try {
 				if (decl != null) {
 					sb.append(decl.getCssText());
@@ -224,7 +207,27 @@ public class CssSpyDialog extends Dialog {
 				sb.append(e);
 			}
 		}
-		cssRules.setText(sb.toString());
+		if (element.getStaticPseudoInstances().length > 0) {
+			sb.append("\nStatic Pseudoinstances:\n  ");
+			Activator.join(sb, element.getStaticPseudoInstances(), "\n  ");
+		}
+
+		if (element.getCSSClass() != null) {
+			sb.append("\n\nCSS Classes:\n  ");
+			Activator.join(sb, element.getCSSClass().split(" +"), "\n  ");
+		}
+
+		// FIXME: shouldn't this be getCSSStyle?
+		if (element.getAttribute("style") != null) {
+			sb.append("\n\nSWT Style Bits:\n  ");
+			Activator.join(sb, element.getAttribute("style").split(" +"),
+					"\n  ");
+		}
+
+		sb.append("\n\nCSS Class Element:\n  ").append(
+				element.getClass().getName());
+
+		cssRules.setText(sb.toString().trim());
 
 		disposeHighlights();
 		highlightWidget(selected);
