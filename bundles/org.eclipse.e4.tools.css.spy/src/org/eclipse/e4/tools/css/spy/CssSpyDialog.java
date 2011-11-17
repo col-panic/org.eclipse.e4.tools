@@ -180,26 +180,48 @@ public class CssSpyDialog extends Dialog {
 
         StringBuilder sb = new StringBuilder();
         sb.append("CSS Element: ").append(element.getClass().getName());
-        sb.append("\nStatic Pseudoinstances: ");
-        Activator.join(sb, element.getStaticPseudoInstances(), ", ");
+        if (element.getCSSStyle() != null) {
+            sb.append("\nCSS Inline Style(s):\n ");
+            Activator.join(sb, element.getCSSStyle().split(";"), ";\n ");
+        }
 
-        sb.append("\n\nCSS Rules:\n");
-        CSSStyleDeclaration decl = element.getDefaultStyleDeclaration(""); // engine.getViewCSS().getComputedStyle(element, null);
-        try {
-            if (decl != null) {
-                sb.append(decl.getCssText());
+        if (element.getStaticPseudoInstances().length > 0) {
+            sb.append("\nStatic Pseudoinstances:\n ");
+            Activator.join(sb, element.getStaticPseudoInstances(), "\n ");
+        }
+
+        if (element.getCSSClass() != null) {
+            sb.append("\n\nCSS Classes:\n ");
+            Activator.join(sb, element.getCSSClass().split(" +"), "\n ");
+        }
+
+        // FIXME: shouldn't this be getCSSStyle?
+        if (element.getAttribute("style") != null) {
+            sb.append("\n\nSWT Style Bits:\n ");
+            Activator.join(sb, element.getAttribute("style").split(" +"), "\n ");
+        }
+
+        CSSEngine engine = getCSSEngine(element);
+        CSSStyleDeclaration decl = engine.getViewCSS().getComputedStyle(element, null);
+        if (decl != null) {
+            sb.append("\n\nCSS Rules:\n");
+            try {
+                if (decl != null) {
+                    sb.append(decl.getCssText());
+                }
+            } catch (Throwable e) {
+                sb.append(e);
             }
-        } catch (Throwable e) {
-            sb.append(e);
         }
         cssRules.setText(sb.toString());
-        //cssRules.setText(cssE)
         
         disposeHighlights();
         highlightWidget(selected);
     }
 
     private void highlightWidget(Widget selected) {
+        widgetTreeViewer.reveal(selected);
+
         Rectangle bounds = getBounds(selected); // relative to absolute display, not the widget
         if (bounds == null /*|| bounds.height == 0 || bounds.width == 0*/) {
             return;
@@ -244,7 +266,10 @@ public class CssSpyDialog extends Dialog {
     }
 
     private Rectangle getBounds(Widget widget) {
-        if (widget instanceof Control) {
+        if (widget instanceof Shell) {
+            // Shell bounds are already in display coordinates
+            return ((Shell) widget).getBounds();
+        } else if (widget instanceof Control) {
             Control control = (Control) widget;
             Rectangle bounds = control.getBounds();
             return control.getDisplay().map(control.getParent(), null, bounds);
@@ -356,7 +381,7 @@ public class CssSpyDialog extends Dialog {
         propsComposite.setLayout(propsTableLayout);
 
         /// THE CSS RULES
-        cssRules = new Text(container, SWT.BORDER | SWT.READ_ONLY | SWT.H_SCROLL | SWT.V_SCROLL | SWT.CANCEL | SWT.MULTI);
+        cssRules = new Text(container, SWT.BORDER | /*SWT.READ_ONLY | SWT.H_SCROLL | SWT.V_SCROLL | */SWT.MULTI);
         cssRules.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
 
         /// THE CSS PROPERTIES TABLE (again)
@@ -451,6 +476,10 @@ public class CssSpyDialog extends Dialog {
     private String searchInProgress;
     private void performCSSSearch(String text) {
         disposeHighlights();
+        widgetTreeViewer.collapseAll();
+        if (text.trim().isEmpty()) {
+            return;
+        }
         searchInProgress = text;
         CSSStylableElement element = getCSSElement(getShell(shown));
         if (element == null) {
