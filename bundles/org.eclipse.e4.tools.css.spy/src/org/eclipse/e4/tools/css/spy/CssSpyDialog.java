@@ -227,6 +227,12 @@ public class CssSpyDialog extends Dialog {
 		sb.append("\n\nCSS Class Element:\n  ").append(
 				element.getClass().getName());
 
+		// this is useful for diagnosing issues
+		if (element.getNativeWidget() instanceof Composite) {
+			sb.append("\n\nSWT Layout:\n  ").append(
+					((Composite) element.getNativeWidget()).getLayout());
+		}
+
 		cssRules.setText(sb.toString().trim());
 
 		disposeHighlights();
