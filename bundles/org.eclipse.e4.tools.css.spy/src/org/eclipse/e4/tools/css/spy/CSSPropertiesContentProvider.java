@@ -18,7 +18,6 @@ import java.util.Map.Entry;
 import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
 import org.eclipse.e4.ui.css.core.dom.properties.ICSSPropertyHandler;
 import org.eclipse.e4.ui.css.core.engine.CSSEngine;
-import org.eclipse.e4.ui.css.core.impl.engine.AbstractCSSEngine;
 import org.eclipse.e4.ui.css.swt.dom.WidgetElement;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
@@ -45,18 +44,14 @@ public class CSSPropertiesContentProvider implements IStructuredContentProvider 
     }
 
     public Object[] getElements(Object inputElement) {
-        if (!(cssEngine instanceof AbstractCSSEngine) || ((AbstractCSSEngine) cssEngine).propertyHandlerMap == null
-                || !((AbstractCSSEngine) cssEngine).propertyHandlerMap.containsKey(input.getClass().getName())) {
-            return new Object[0];
-        }
-        Map<String, ICSSPropertyHandler> handlerMap = (Map<String, ICSSPropertyHandler>) ((AbstractCSSEngine) cssEngine).propertyHandlerMap
-                .get(input.getClass().getName());
+		Map<String, ICSSPropertyHandler> handlerMap = cssEngine
+				.getCSSPropertyHandlers(input);
         if (handlerMap == null) {
             return null;
         }
-        List<CSSHandler> properties = new ArrayList<CSSHandler>(handlerMap.size());
+        List<CSSPropertyProvider> properties = new ArrayList<CSSPropertyProvider>(handlerMap.size());
         for (Entry<String, ICSSPropertyHandler> entry : handlerMap.entrySet()) {
-            properties.add(new CSSHandler(entry.getKey(), input, entry.getValue(), cssEngine));
+            properties.add(new CSSPropertyProvider(entry.getKey(), input, entry.getValue(), cssEngine));
         }
         return properties.toArray();
     }
