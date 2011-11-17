@@ -67,477 +67,530 @@ import org.w3c.dom.NodeList;
 import org.w3c.dom.css.CSSStyleDeclaration;
 
 public class CssSpyDialog extends Dialog {
-    /** @return the CSS element corresponding to the argument, or null if none */
-    public static CSSStylableElement getCSSElement(Object o) {
-        if (o instanceof CSSStylableElement) {
-            return (CSSStylableElement) o;
-        } else if (o instanceof Widget) {
-            CSSEngine engine = WidgetElement.getEngine((Widget) o);
-            return (CSSStylableElement) engine.getElement(o);
-        }
-        return null;
-    }
+	/** @return the CSS element corresponding to the argument, or null if none */
+	public static CSSStylableElement getCSSElement(Object o) {
+		if (o instanceof CSSStylableElement) {
+			return (CSSStylableElement) o;
+		} else if (o instanceof Widget) {
+			CSSEngine engine = WidgetElement.getEngine((Widget) o);
+			return (CSSStylableElement) engine.getElement(o);
+		}
+		return null;
+	}
 
-    /** @return the CSS engine governing the argument, or null if none */
-    public static CSSEngine getCSSEngine(Object o) {
-        if (o instanceof CSSStylableElement) {
-            CSSStylableElement element = (CSSStylableElement) o;
-            return WidgetElement.getEngine((Widget) element.getNativeWidget());
-        } else if (o instanceof Widget) {
-            return WidgetElement.getEngine((Widget) o);
-        }
-        return null;
-    }
+	/** @return the CSS engine governing the argument, or null if none */
+	public static CSSEngine getCSSEngine(Object o) {
+		if (o instanceof CSSStylableElement) {
+			CSSStylableElement element = (CSSStylableElement) o;
+			return WidgetElement.getEngine((Widget) element.getNativeWidget());
+		} else if (o instanceof Widget) {
+			return WidgetElement.getEngine((Widget) o);
+		}
+		return null;
+	}
 
-    private Display display;
-    private Widget specimen;
-    private Widget shown;
+	private Display display;
+	private Widget specimen;
+	private Widget shown;
 
-    private TableViewer cssPropertiesViewer;
-    private TreeViewer widgetTreeViewer;
-    private Text cssRules;
-    
-    private List<Shell> highlights = new LinkedList<Shell>();
-    private List<Region> highlightRegions = new LinkedList<Region>();
-    private Text cssSearchBox;
-    private Button showUnsetProperties;
+	private TableViewer cssPropertiesViewer;
+	private TreeViewer widgetTreeViewer;
+	private Text cssRules;
 
-    protected ViewerFilter unsetPropertyFilter = new ViewerFilter() {
+	private List<Shell> highlights = new LinkedList<Shell>();
+	private List<Region> highlightRegions = new LinkedList<Region>();
+	private Text cssSearchBox;
+	private Button showUnsetProperties;
 
-        @Override
-        public boolean select(Viewer viewer, Object parentElement, Object element) {
-            if (element instanceof CSSHandler) {
-                return ((CSSHandler) element).getValue() != null;
-            }
-            return false;
-        }
-    };
+	protected ViewerFilter unsetPropertyFilter = new ViewerFilter() {
 
-    /**
-     * Create the dialog.
-     * @param parentShell
-     */
-    public CssSpyDialog(Shell parentShell) {
-        super(parentShell);
-        display = parentShell.getDisplay();
-        setShellStyle(SWT.DIALOG_TRIM | SWT.RESIZE/* | SWT.PRIMARY_MODAL*/);
-    }
+		@Override
+		public boolean select(Viewer viewer, Object parentElement,
+				Object element) {
+			if (element instanceof CSSPropertyProvider) {
+				try {
+					return ((CSSPropertyProvider) element).getValue() != null;
+				} catch (Exception e) {
+					return false;
+				}
+			}
+			return false;
+		}
+	};
 
-    public Widget getSpecimen() {
-        return specimen;
-    }
+	/**
+	 * Create the dialog.
+	 * 
+	 * @param parentShell
+	 */
+	public CssSpyDialog(Shell parentShell) {
+		super(parentShell);
+		display = parentShell.getDisplay();
+		setShellStyle(SWT.DIALOG_TRIM | SWT.RESIZE/* | SWT.PRIMARY_MODAL */);
+	}
 
-    private boolean isLive() {
-        return specimen == null;
-    }
+	public Widget getSpecimen() {
+		return specimen;
+	}
 
-    public void setSpecimen(Widget specimen) {
-        this.specimen = specimen;
-        update();
-    }
+	private boolean isLive() {
+		return specimen == null;
+	}
 
-    private Widget getActiveSpecimen() {
-        if (specimen != null) {
-            return specimen;
-        }
-        return display.getCursorControl();
-    }
+	public void setSpecimen(Widget specimen) {
+		this.specimen = specimen;
+		update();
+	}
 
-    protected boolean shouldDismissOnLostFocus() {
-        return false;
-    }
+	private Widget getActiveSpecimen() {
+		if (specimen != null) {
+			return specimen;
+		}
+		return display.getCursorControl();
+	}
 
-    protected void update() {
-        if (getShell() == null) {
-            return;
-        }
-        Widget current = getActiveSpecimen();
-        if (shown == current) {
-            return;
-        }
-        shown = current;
+	protected boolean shouldDismissOnLostFocus() {
+		return false;
+	}
 
-        CSSEngine engine = WidgetElement.getEngine(shown);
-        CSSStylableElement element = (CSSStylableElement) engine.getElement(shown);
-        if (element == null) {
-            return;
-        }
+	protected void update() {
+		if (getShell() == null) {
+			return;
+		}
+		Widget current = getActiveSpecimen();
+		if (shown == current) {
+			return;
+		}
+		shown = current;
 
-        widgetTreeViewer.setInput(new Object[] { shown instanceof Control ? ((Control) shown).getShell() : shown });
-        widgetTreeViewer.reveal(shown);
-        widgetTreeViewer.setSelection(new StructuredSelection(shown));
+		CSSEngine engine = WidgetElement.getEngine(shown);
+		CSSStylableElement element = (CSSStylableElement) engine
+				.getElement(shown);
+		if (element == null) {
+			return;
+		}
 
-        populate(shown);
-    }
+		widgetTreeViewer
+				.setInput(new Object[] { shown instanceof Control ? ((Control) shown)
+						.getShell() : shown });
+		widgetTreeViewer.reveal(shown);
+		widgetTreeViewer.setSelection(new StructuredSelection(shown));
 
-    protected void populate(Widget selected) {
-        CSSStylableElement element = getCSSElement(selected);
-        if (element == null) {
-            return;
-        }
+		populate(shown);
+	}
 
-        cssPropertiesViewer.setInput(selected);
+	protected void populate(Widget selected) {
+		CSSStylableElement element = getCSSElement(selected);
+		if (element == null) {
+			return;
+		}
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("CSS Element: ").append(element.getClass().getName());
-        if (element.getCSSStyle() != null) {
-            sb.append("\nCSS Inline Style(s):\n ");
-            Activator.join(sb, element.getCSSStyle().split(";"), ";\n ");
-        }
+		cssPropertiesViewer.setInput(selected);
 
-        if (element.getStaticPseudoInstances().length > 0) {
-            sb.append("\nStatic Pseudoinstances:\n ");
-            Activator.join(sb, element.getStaticPseudoInstances(), "\n ");
-        }
+		StringBuilder sb = new StringBuilder();
+		sb.append("CSS Element: ").append(element.getClass().getName());
+		if (element.getCSSStyle() != null) {
+			sb.append("\nCSS Inline Style(s):\n ");
+			Activator.join(sb, element.getCSSStyle().split(";"), ";\n ");
+		}
 
-        if (element.getCSSClass() != null) {
-            sb.append("\n\nCSS Classes:\n ");
-            Activator.join(sb, element.getCSSClass().split(" +"), "\n ");
-        }
+		if (element.getStaticPseudoInstances().length > 0) {
+			sb.append("\nStatic Pseudoinstances:\n ");
+			Activator.join(sb, element.getStaticPseudoInstances(), "\n ");
+		}
 
-        // FIXME: shouldn't this be getCSSStyle?
-        if (element.getAttribute("style") != null) {
-            sb.append("\n\nSWT Style Bits:\n ");
-            Activator.join(sb, element.getAttribute("style").split(" +"), "\n ");
-        }
+		if (element.getCSSClass() != null) {
+			sb.append("\n\nCSS Classes:\n ");
+			Activator.join(sb, element.getCSSClass().split(" +"), "\n ");
+		}
 
-        CSSEngine engine = getCSSEngine(element);
-        CSSStyleDeclaration decl = engine.getViewCSS().getComputedStyle(element, null);
-        if (decl != null) {
-            sb.append("\n\nCSS Rules:\n");
-            try {
-                if (decl != null) {
-                    sb.append(decl.getCssText());
-                }
-            } catch (Throwable e) {
-                sb.append(e);
-            }
-        }
-        cssRules.setText(sb.toString());
-        
-        disposeHighlights();
-        highlightWidget(selected);
-    }
+		// FIXME: shouldn't this be getCSSStyle?
+		if (element.getAttribute("style") != null) {
+			sb.append("\n\nSWT Style Bits:\n ");
+			Activator
+					.join(sb, element.getAttribute("style").split(" +"), "\n ");
+		}
 
-    private void highlightWidget(Widget selected) {
-        widgetTreeViewer.reveal(selected);
+		CSSEngine engine = getCSSEngine(element);
+		CSSStyleDeclaration decl = engine.getViewCSS().getComputedStyle(
+				element, null);
+		if (decl != null) {
+			sb.append("\n\nCSS Rules:\n");
+			try {
+				if (decl != null) {
+					sb.append(decl.getCssText());
+				}
+			} catch (Throwable e) {
+				sb.append(e);
+			}
+		}
+		cssRules.setText(sb.toString());
 
-        Rectangle bounds = getBounds(selected); // relative to absolute display, not the widget
-        if (bounds == null /*|| bounds.height == 0 || bounds.width == 0*/) {
-            return;
-        }
-        // emulate a transparent background as per SWT Snippet180
-        Shell selectedShell = getShell(selected);
-        if (selectedShell != null) {
-            //bounds = slectedShell.getDisplay().map(null, selectedShell, bounds);
-        }
-        Shell highlight = new Shell(selectedShell, SWT.NO_TRIM | SWT.MODELESS); // appears on top
-        highlight.setBackground(display.getSystemColor(SWT.COLOR_RED));
-        Region highlightRegion = new Region();
-        highlightRegion.add(0, 0, 1, bounds.height + 2);
-        highlightRegion.add(0, 0, bounds.width + 2, 1);
-        highlightRegion.add(bounds.width + 1, 0, 1, bounds.height + 2);
-        highlightRegion.add(0, bounds.height + 1, bounds.width + 2, 1);
-        highlight.setRegion(highlightRegion);
-        highlight.setBounds(bounds.x - 1, bounds.y - 1, bounds.width + 2, bounds.height + 2);
-        highlight.setEnabled(false);
-        highlight.setVisible(true); // not open(): setVisible() prevents taking focus
+		disposeHighlights();
+		highlightWidget(selected);
+	}
 
-        highlights.add(highlight);
-        highlightRegions.add(highlightRegion);
-    }
+	private void highlightWidget(Widget selected) {
+		widgetTreeViewer.reveal(selected);
 
-    private Shell getShell(Widget widget) {
-        if (widget instanceof Control) {
-            return ((Control) widget).getShell();
-        }
-        return null;
-    }
+		Rectangle bounds = getBounds(selected); // relative to absolute display,
+												// not the widget
+		if (bounds == null /* || bounds.height == 0 || bounds.width == 0 */) {
+			return;
+		}
+		// emulate a transparent background as per SWT Snippet180
+		Shell selectedShell = getShell(selected);
+		if (selectedShell != null) {
+			// bounds = slectedShell.getDisplay().map(null, selectedShell,
+			// bounds);
+		}
+		Shell highlight = new Shell(selectedShell, SWT.NO_TRIM | SWT.MODELESS); // appears
+																				// on
+																				// top
+		highlight.setBackground(display.getSystemColor(SWT.COLOR_RED));
+		Region highlightRegion = new Region();
+		highlightRegion.add(0, 0, 1, bounds.height + 2);
+		highlightRegion.add(0, 0, bounds.width + 2, 1);
+		highlightRegion.add(bounds.width + 1, 0, 1, bounds.height + 2);
+		highlightRegion.add(0, bounds.height + 1, bounds.width + 2, 1);
+		highlight.setRegion(highlightRegion);
+		highlight.setBounds(bounds.x - 1, bounds.y - 1, bounds.width + 2,
+				bounds.height + 2);
+		highlight.setEnabled(false);
+		highlight.setVisible(true); // not open(): setVisible() prevents taking
+									// focus
 
-    private void disposeHighlights() {
-        for (Shell highlight : highlights) {
-            highlight.dispose();
-        }
-        highlights.clear();
-        for (Region region : highlightRegions) {
-            region.dispose();
-        }
-        highlightRegions.clear();
-    }
+		highlights.add(highlight);
+		highlightRegions.add(highlightRegion);
+	}
 
-    private Rectangle getBounds(Widget widget) {
-        if (widget instanceof Shell) {
-            // Shell bounds are already in display coordinates
-            return ((Shell) widget).getBounds();
-        } else if (widget instanceof Control) {
-            Control control = (Control) widget;
-            Rectangle bounds = control.getBounds();
-            return control.getDisplay().map(control.getParent(), null, bounds);
-        } else if (widget instanceof ToolItem) {
-            ToolItem item = (ToolItem) widget;
-            Rectangle bounds = item.getBounds();
-            return item.getDisplay().map(item.getParent(), null, bounds);
-        }
-        // FIXME: figure out how to map items to a position
-        return null;
-    }
+	private Shell getShell(Widget widget) {
+		if (widget instanceof Control) {
+			return ((Control) widget).getShell();
+		}
+		return null;
+	}
 
-    /**
-     * Create contents of the dialog.
-     * @param parent
-     */
-    @Override
-    protected Control createDialogArea(Composite parent) {
-        Composite outer = (Composite) super.createDialogArea(parent);
-        
-        cssSearchBox = new Text(outer, SWT.BORDER | SWT.SEARCH | SWT.ICON_SEARCH | SWT.ICON_CANCEL);
-        cssSearchBox.setMessage("CSS Selector");
-        cssSearchBox.setToolTipText("Highlight matching widgets");
-        cssSearchBox.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false, 1, 1));
+	private void disposeHighlights() {
+		for (Shell highlight : highlights) {
+			highlight.dispose();
+		}
+		highlights.clear();
+		for (Region region : highlightRegions) {
+			region.dispose();
+		}
+		highlightRegions.clear();
+	}
 
-        SashForm sashForm = new SashForm(outer, SWT.VERTICAL);
-        sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1));
+	private Rectangle getBounds(Widget widget) {
+		if (widget instanceof Shell) {
+			// Shell bounds are already in display coordinates
+			return ((Shell) widget).getBounds();
+		} else if (widget instanceof Control) {
+			Control control = (Control) widget;
+			Rectangle bounds = control.getBounds();
+			return control.getDisplay().map(control.getParent(), null, bounds);
+		} else if (widget instanceof ToolItem) {
+			ToolItem item = (ToolItem) widget;
+			Rectangle bounds = item.getBounds();
+			return item.getDisplay().map(item.getParent(), null, bounds);
+		}
+		// FIXME: figure out how to map items to a position
+		return null;
+	}
 
-        /// THE WIDGET TREE
-        Composite widgetsComposite = new Composite(sashForm, SWT.NONE);
-        //        GridData gridWData = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 1);
-        //        gridWData.minimumHeight = 100;
-        //        widgetsComposite.setLayoutData(gridWData);
+	/**
+	 * Create contents of the dialog.
+	 * 
+	 * @param parent
+	 */
+	@Override
+	protected Control createDialogArea(Composite parent) {
+		Composite outer = (Composite) super.createDialogArea(parent);
 
-        widgetTreeViewer = new TreeViewer(widgetsComposite, SWT.BORDER);
-        widgetTreeViewer.setContentProvider(new WidgetTreeProvider());
-        widgetTreeViewer.setAutoExpandLevel(0);
-        widgetTreeViewer.getTree().setLinesVisible(true);
-        widgetTreeViewer.getTree().setHeaderVisible(true);
+		cssSearchBox = new Text(outer, SWT.BORDER | SWT.SEARCH
+				| SWT.ICON_SEARCH | SWT.ICON_CANCEL);
+		cssSearchBox.setMessage("CSS Selector");
+		cssSearchBox.setToolTipText("Highlight matching widgets");
+		cssSearchBox.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
+				false, 1, 1));
 
-        TreeViewerColumn widgetTypeColumn = new TreeViewerColumn(widgetTreeViewer, SWT.NONE);
-        widgetTypeColumn.setLabelProvider(new WidgetCSSDetailsLabelProvider());
-        widgetTypeColumn.getColumn().setWidth(100);
-        widgetTypeColumn.getColumn().setText("Widget");
+		SashForm sashForm = new SashForm(outer, SWT.VERTICAL);
+		sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1,
+				1));
 
-        TreeViewerColumn widgetColumnId = new TreeViewerColumn(widgetTreeViewer, SWT.NONE);
-        widgetColumnId.setLabelProvider(new WidgetCSSDetailsLabelProvider());
-        widgetColumnId.getColumn().setWidth(100);
-        widgetColumnId.getColumn().setText("CSS Class");
+		// / THE WIDGET TREE
+		Composite widgetsComposite = new Composite(sashForm, SWT.NONE);
+		// GridData gridWData = new GridData(SWT.FILL, SWT.FILL, true, true, 2,
+		// 1);
+		// gridWData.minimumHeight = 100;
+		// widgetsComposite.setLayoutData(gridWData);
 
-        TreeViewerColumn widgetColumnClass = new TreeViewerColumn(widgetTreeViewer, SWT.NONE);
-        widgetColumnClass.setLabelProvider(new WidgetCSSDetailsLabelProvider());
-        widgetColumnClass.getColumn().setWidth(100);
-        widgetColumnClass.getColumn().setText("CSS Id");
+		widgetTreeViewer = new TreeViewer(widgetsComposite, SWT.BORDER);
+		widgetTreeViewer.setContentProvider(new WidgetTreeProvider());
+		widgetTreeViewer.setAutoExpandLevel(0);
+		widgetTreeViewer.getTree().setLinesVisible(true);
+		widgetTreeViewer.getTree().setHeaderVisible(true);
 
-        TreeColumnLayout widgetsTableLayout = new TreeColumnLayout();
-        widgetsTableLayout.setColumnData(widgetTypeColumn.getColumn(), new ColumnWeightData(50));
-        widgetsTableLayout.setColumnData(widgetColumnClass.getColumn(), new ColumnWeightData(40));
-        widgetsTableLayout.setColumnData(widgetColumnId.getColumn(), new ColumnWeightData(40));
-        widgetsComposite.setLayout(widgetsTableLayout);
+		TreeViewerColumn widgetTypeColumn = new TreeViewerColumn(
+				widgetTreeViewer, SWT.NONE);
+		widgetTypeColumn.setLabelProvider(new WidgetCSSDetailsLabelProvider());
+		widgetTypeColumn.getColumn().setWidth(100);
+		widgetTypeColumn.getColumn().setText("Widget");
 
-        /// HEADERS
-        Composite container = new Composite(sashForm, SWT.NONE);
-        container.setLayout(new GridLayout(2, true));
+		TreeViewerColumn widgetColumnId = new TreeViewerColumn(
+				widgetTreeViewer, SWT.NONE);
+		widgetColumnId.setLabelProvider(new WidgetCSSDetailsLabelProvider());
+		widgetColumnId.getColumn().setWidth(100);
+		widgetColumnId.getColumn().setText("CSS Class");
 
-        Label lblCssProperties = new Label(container, SWT.NONE);
-        lblCssProperties.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
-        lblCssProperties.setText("CSS Properties");
+		TreeViewerColumn widgetColumnClass = new TreeViewerColumn(
+				widgetTreeViewer, SWT.NONE);
+		widgetColumnClass.setLabelProvider(new WidgetCSSDetailsLabelProvider());
+		widgetColumnClass.getColumn().setWidth(100);
+		widgetColumnClass.getColumn().setText("CSS Id");
 
-        Label lblCssRules = new Label(container, SWT.NONE);
-        lblCssRules.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 1, 1));
-        lblCssRules.setText("CSS Rules");
+		TreeColumnLayout widgetsTableLayout = new TreeColumnLayout();
+		widgetsTableLayout.setColumnData(widgetTypeColumn.getColumn(),
+				new ColumnWeightData(50));
+		widgetsTableLayout.setColumnData(widgetColumnClass.getColumn(),
+				new ColumnWeightData(40));
+		widgetsTableLayout.setColumnData(widgetColumnId.getColumn(),
+				new ColumnWeightData(40));
+		widgetsComposite.setLayout(widgetsTableLayout);
 
-        //// THE CSS PROPERTIES TABLE 
-        Composite propsComposite = new Composite(container, SWT.NONE);
-        GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
-        gridData.minimumHeight = 100;
-        propsComposite.setLayoutData(gridData);
+		// / HEADERS
+		Composite container = new Composite(sashForm, SWT.NONE);
+		container.setLayout(new GridLayout(2, true));
 
-        cssPropertiesViewer = new TableViewer(propsComposite, SWT.BORDER | SWT.FULL_SELECTION);
-        cssPropertiesViewer.setContentProvider(new CSSPropertiesContentProvider());
-        cssPropertiesViewer.getTable().setLinesVisible(true);
-        cssPropertiesViewer.getTable().setHeaderVisible(true);
-        cssPropertiesViewer.setComparator(new ViewerComparator());
+		Label lblCssProperties = new Label(container, SWT.NONE);
+		lblCssProperties.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER,
+				false, false, 1, 1));
+		lblCssProperties.setText("CSS Properties");
 
-        TableViewerColumn propName = new TableViewerColumn(cssPropertiesViewer, SWT.NONE);
-        propName.getColumn().setWidth(100);
-        propName.getColumn().setText("Property");
-        propName.setLabelProvider(new ColumnLabelProvider() {
-            @Override
-            public String getText(Object element) {
-                return ((CSSHandler) element).getPropertyName();
-            }
-        });
+		Label lblCssRules = new Label(container, SWT.NONE);
+		lblCssRules.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false,
+				false, 1, 1));
+		lblCssRules.setText("CSS Rules");
 
-        TableViewerColumn propValue = new TableViewerColumn(cssPropertiesViewer, SWT.NONE);
-        propValue.getColumn().setWidth(100);
-        propValue.getColumn().setText("Value");
-        propValue.setLabelProvider(new ColumnLabelProvider() {
-            @Override
-            public String getText(Object element) {
-                return ((CSSHandler) element).getValue();
-            }
-        });
+		// // THE CSS PROPERTIES TABLE
+		Composite propsComposite = new Composite(container, SWT.BORDER
+				| SWT.H_SCROLL | SWT.V_SCROLL);
+		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
+		gridData.minimumHeight = 50;
+		propsComposite.setLayoutData(gridData);
 
-        TableColumnLayout propsTableLayout = new TableColumnLayout();
-        propsTableLayout.setColumnData(propName.getColumn(), new ColumnWeightData(50));
-        propsTableLayout.setColumnData(propValue.getColumn(), new ColumnWeightData(50));
-        propsComposite.setLayout(propsTableLayout);
+		cssPropertiesViewer = new TableViewer(propsComposite, SWT.BORDER
+				| SWT.V_SCROLL | SWT.FULL_SELECTION);
+		cssPropertiesViewer
+				.setContentProvider(new CSSPropertiesContentProvider());
+		cssPropertiesViewer.getTable().setLinesVisible(true);
+		cssPropertiesViewer.getTable().setHeaderVisible(true);
+		cssPropertiesViewer.setComparator(new ViewerComparator());
 
-        /// THE CSS RULES
-        cssRules = new Text(container, SWT.BORDER | /*SWT.READ_ONLY | SWT.H_SCROLL | SWT.V_SCROLL | */SWT.MULTI);
-        cssRules.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false, 1, 1));
+		TableViewerColumn propName = new TableViewerColumn(cssPropertiesViewer,
+				SWT.NONE);
+		propName.getColumn().setWidth(100);
+		propName.getColumn().setText("Property");
+		propName.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				return ((CSSPropertyProvider) element).getPropertyName();
+			}
+		});
 
-        /// THE CSS PROPERTIES TABLE (again)
-        showUnsetProperties = new Button(container, SWT.CHECK);
-        showUnsetProperties.setText("Show unset properties");
+		TableViewerColumn propValue = new TableViewerColumn(
+				cssPropertiesViewer, SWT.NONE);
+		propValue.getColumn().setWidth(100);
+		propValue.getColumn().setText("Value");
+		propValue.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object element) {
+				try {
+					return ((CSSPropertyProvider) element).getValue();
+				} catch (Exception e) {
+					System.err.println("Error fetching property: " + element
+							+ ": " + e);
+					return null;
+				}
+			}
+		});
 
-        // and for balance
-        new Label(container, SWT.NONE);
+		TableColumnLayout propsTableLayout = new TableColumnLayout();
+		propsTableLayout.setColumnData(propName.getColumn(),
+				new ColumnWeightData(50));
+		propsTableLayout.setColumnData(propValue.getColumn(),
+				new ColumnWeightData(50));
+		propsComposite.setLayout(propsTableLayout);
 
-        /// The listeners
+		// / THE CSS RULES
+		cssRules = new Text(container, SWT.BORDER | SWT.H_SCROLL | SWT.V_SCROLL
+				| SWT.MULTI);
+		cssRules.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1,
+				1));
 
-        cssSearchBox.addModifyListener(new ModifyListener() {
-            private Runnable updater;
+		// / THE CSS PROPERTIES TABLE (again)
+		showUnsetProperties = new Button(container, SWT.CHECK);
+		showUnsetProperties.setText("Show unset properties");
 
-            public void modifyText(ModifyEvent e) {
-                display.timerExec(200, updater = new Runnable() {
-                    public void run() {
-                        if (updater == this) {
-                            performCSSSearch(cssSearchBox.getText());
-                        }
-                    }
-                });
-            }
-        });
-        cssSearchBox.addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.keyCode == SWT.ARROW_DOWN && (e.stateMask & SWT.MODIFIER_MASK) == 0) {
-                    widgetTreeViewer.getControl().setFocus();
-                }
-            }
-        });
+		// and for balance
+		new Label(container, SWT.NONE);
 
-        widgetTreeViewer.addSelectionChangedListener(new ISelectionChangedListener() {
-            public void selectionChanged(SelectionChangedEvent event) {
-                if (!event.getSelection().isEmpty()) {
-                    populate((Widget) ((StructuredSelection) event.getSelection()).getFirstElement());
-                }
-            }
-        });
-        if (isLive()) {
-            container.addMouseMoveListener(new MouseMoveListener() {
-                public void mouseMove(MouseEvent e) {
-                    update();
-                }
-            });
-        }
+		// / The listeners
 
-        if (shouldDismissOnLostFocus()) {
-            container.addFocusListener(new FocusAdapter() {
-                @Override
-                public void focusLost(FocusEvent e) {
-                    setReturnCode(Window.OK);
-                    close();
-                }
-            });
-        }
-        container.addKeyListener(new KeyAdapter() {
-            public void keyPressed(KeyEvent e) {
-                if (e.character == SWT.ESC) {
-                    cancelPressed();
-                } else if (e.character == SWT.CR | e.character == SWT.LF) {
-                    okPressed();
-                }
-            }
-        });
+		cssSearchBox.addModifyListener(new ModifyListener() {
+			private Runnable updater;
 
-        outer.addDisposeListener(new DisposeListener() {
-            public void widgetDisposed(DisposeEvent e) {
-                dispose();
-            }
-        });
+			public void modifyText(ModifyEvent e) {
+				display.timerExec(200, updater = new Runnable() {
+					public void run() {
+						if (updater == this) {
+							performCSSSearch(cssSearchBox.getText());
+						}
+					}
+				});
+			}
+		});
+		cssSearchBox.addKeyListener(new KeyAdapter() {
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.keyCode == SWT.ARROW_DOWN
+						&& (e.stateMask & SWT.MODIFIER_MASK) == 0) {
+					widgetTreeViewer.getControl().setFocus();
+				}
+			}
+		});
 
-        showUnsetProperties.setSelection(true);
-        showUnsetProperties.addSelectionListener(new SelectionAdapter() {
-            @Override
-            public void widgetSelected(SelectionEvent e) {
-                if (showUnsetProperties.getSelection()) {
-                    cssPropertiesViewer.removeFilter(unsetPropertyFilter);
-                } else {
-                    cssPropertiesViewer.addFilter(unsetPropertyFilter);
-                }
-            }
-        });
+		widgetTreeViewer
+				.addSelectionChangedListener(new ISelectionChangedListener() {
+					public void selectionChanged(SelectionChangedEvent event) {
+						if (!event.getSelection().isEmpty()) {
+							populate((Widget) ((StructuredSelection) event
+									.getSelection()).getFirstElement());
+						}
+					}
+				});
+		if (isLive()) {
+			container.addMouseMoveListener(new MouseMoveListener() {
+				public void mouseMove(MouseEvent e) {
+					update();
+				}
+			});
+		}
 
-        update();
-        sashForm.setWeights(new int[] { 50, 50 });
-        widgetTreeViewer.getControl().setFocus();
-        return outer;
-    }
+		if (shouldDismissOnLostFocus()) {
+			container.addFocusListener(new FocusAdapter() {
+				@Override
+				public void focusLost(FocusEvent e) {
+					setReturnCode(Window.OK);
+					close();
+				}
+			});
+		}
+		container.addKeyListener(new KeyAdapter() {
+			public void keyPressed(KeyEvent e) {
+				if (e.character == SWT.ESC) {
+					cancelPressed();
+				} else if (e.character == SWT.CR | e.character == SWT.LF) {
+					okPressed();
+				}
+			}
+		});
 
-    private String searchInProgress;
-    private void performCSSSearch(String text) {
-        disposeHighlights();
-        widgetTreeViewer.collapseAll();
-        if (text.trim().isEmpty()) {
-            return;
-        }
-        searchInProgress = text;
-        CSSStylableElement element = getCSSElement(getShell(shown));
-        if (element == null) {
-            return;
-        }
+		outer.addDisposeListener(new DisposeListener() {
+			public void widgetDisposed(DisposeEvent e) {
+				dispose();
+			}
+		});
 
-        CSSEngine engine = WidgetElement.getEngine(shown);
-        try {
-            SelectorList selectors = engine.parseSelectors(text);
-            processCSSSearch(text, null, engine, selectors, element);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+		showUnsetProperties.setSelection(true);
+		showUnsetProperties.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				if (showUnsetProperties.getSelection()) {
+					cssPropertiesViewer.removeFilter(unsetPropertyFilter);
+				} else {
+					cssPropertiesViewer.addFilter(unsetPropertyFilter);
+				}
+			}
+		});
 
-    }
+		update();
+		sashForm.setWeights(new int[] { 50, 50 });
+		widgetTreeViewer.getControl().setFocus();
+		return outer;
+	}
 
-    private void processCSSSearch(String text, String pseudo, CSSEngine engine, SelectorList selectors,
-            CSSStylableElement element) {
-        if (text != searchInProgress) {
-            return;
-        }
-        boolean matched = false;
-        for (int i = 0; i < selectors.getLength(); i++) {
-            if (matched = engine.matches(selectors.item(i), element, pseudo)) {
-                break;
-            }
-        }
-        if (matched) {
-            highlightWidget((Widget) element.getNativeWidget());
-        }
-        NodeList children = element.getChildNodes();
-        for (int i = 0; i < children.getLength(); i++) {
-            if (text != searchInProgress) {
-                return;
-            }
-            processCSSSearch(text, pseudo, engine, selectors, (CSSStylableElement) children.item(i));
-        }
-    }
+	private String searchInProgress;
 
-    protected void dispose() {
-        disposeHighlights();
-    }
+	private void performCSSSearch(String text) {
+		disposeHighlights();
+		widgetTreeViewer.collapseAll();
+		if (text.trim().isEmpty()) {
+			return;
+		}
+		searchInProgress = text;
+		CSSStylableElement element = getCSSElement(getShell(shown));
+		if (element == null) {
+			return;
+		}
 
-    /**
-     * Create contents of the button bar.
-     * @param parent
-     */
-    @Override
-    protected void createButtonsForButtonBar(Composite parent) {
-        createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL, true);
-        createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
-    }
+		CSSEngine engine = WidgetElement.getEngine(shown);
+		try {
+			SelectorList selectors = engine.parseSelectors(text);
+			processCSSSearch(text, null, engine, selectors, element);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
-    /**
-     * Return the initial size of the dialog.
-     */
-    @Override
-    protected Point getInitialSize() {
-        return new Point(600, 500);
-    }
+	}
+
+	private void processCSSSearch(String text, String pseudo, CSSEngine engine,
+			SelectorList selectors, CSSStylableElement element) {
+		if (text != searchInProgress) {
+			return;
+		}
+		boolean matched = false;
+		for (int i = 0; i < selectors.getLength(); i++) {
+			if (matched = engine.matches(selectors.item(i), element, pseudo)) {
+				break;
+			}
+		}
+		if (matched) {
+			highlightWidget((Widget) element.getNativeWidget());
+		}
+		NodeList children = element.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++) {
+			if (text != searchInProgress) {
+				return;
+			}
+			processCSSSearch(text, pseudo, engine, selectors,
+					(CSSStylableElement) children.item(i));
+		}
+	}
+
+	protected void dispose() {
+		disposeHighlights();
+	}
+
+	/**
+	 * Create contents of the button bar.
+	 * 
+	 * @param parent
+	 */
+	@Override
+	protected void createButtonsForButtonBar(Composite parent) {
+		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
+				true);
+		createButton(parent, IDialogConstants.CANCEL_ID,
+				IDialogConstants.CANCEL_LABEL, false);
+	}
+
+	/**
+	 * Return the initial size of the dialog.
+	 */
+	@Override
+	protected Point getInitialSize() {
+		return new Point(600, 500);
+	}
 }
