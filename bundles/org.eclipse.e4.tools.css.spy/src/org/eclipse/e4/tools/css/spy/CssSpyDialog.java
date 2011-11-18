@@ -22,6 +22,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
@@ -330,41 +331,76 @@ public class CssSpyDialog extends Dialog {
 
 		// / THE WIDGET TREE
 		Composite widgetsComposite = new Composite(sashForm, SWT.NONE);
-		// GridData gridWData = new GridData(SWT.FILL, SWT.FILL, true, true, 2,
-		// 1);
-		// gridWData.minimumHeight = 100;
-		// widgetsComposite.setLayoutData(gridWData);
 
 		widgetTreeViewer = new TreeViewer(widgetsComposite, SWT.BORDER);
 		widgetTreeViewer.setContentProvider(new WidgetTreeProvider());
 		widgetTreeViewer.setAutoExpandLevel(0);
 		widgetTreeViewer.getTree().setLinesVisible(true);
 		widgetTreeViewer.getTree().setHeaderVisible(true);
+		ColumnViewerToolTipSupport.enableFor(widgetTreeViewer);
 
 		TreeViewerColumn widgetTypeColumn = new TreeViewerColumn(
 				widgetTreeViewer, SWT.NONE);
-		widgetTypeColumn.setLabelProvider(new WidgetCSSDetailsLabelProvider());
 		widgetTypeColumn.getColumn().setWidth(100);
 		widgetTypeColumn.getColumn().setText("Widget");
+		widgetTypeColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object item) {
+				CSSStylableElement element = CssSpyDialog.getCSSElement(item);
+				return element.getLocalName() + " ("
+						+ element.getNamespaceURI() + ")";
+			}
+		});
 
-		TreeViewerColumn widgetColumnId = new TreeViewerColumn(
+		TreeViewerColumn widgetClassColumn = new TreeViewerColumn(
 				widgetTreeViewer, SWT.NONE);
-		widgetColumnId.setLabelProvider(new WidgetCSSDetailsLabelProvider());
-		widgetColumnId.getColumn().setWidth(100);
-		widgetColumnId.getColumn().setText("CSS Class");
+		widgetClassColumn.getColumn().setText("CSS Class");
+		widgetClassColumn.getColumn().setWidth(100);
+		widgetClassColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object item) {
+				CSSStylableElement element = CssSpyDialog.getCSSElement(item);
+				if (element.getCSSClass() == null) {
+					return null;
+				}
+				String classes[] = element.getCSSClass().split(" +");
+				return classes.length <= 1 ? classes[0] : classes[0] + " (+"
+						+ (classes.length - 1) + " others)";
+			}
 
-		TreeViewerColumn widgetColumnClass = new TreeViewerColumn(
+			@Override
+			public String getToolTipText(Object item) {
+				CSSStylableElement element = CssSpyDialog.getCSSElement(item);
+				if (element == null) {
+					return null;
+				}
+				StringBuilder sb = new StringBuilder();
+				sb.append(element.getLocalName()).append(" (")
+						.append(element.getNamespaceURI()).append(")");
+				sb.append("\nClasses:\n  ");
+				Activator.join(sb, element.getCSSClass().split(" +"), "\n  ");
+				return sb.toString();
+			}
+		});
+
+		TreeViewerColumn widgetIdColumn = new TreeViewerColumn(
 				widgetTreeViewer, SWT.NONE);
-		widgetColumnClass.setLabelProvider(new WidgetCSSDetailsLabelProvider());
-		widgetColumnClass.getColumn().setWidth(100);
-		widgetColumnClass.getColumn().setText("CSS Id");
+		widgetIdColumn.getColumn().setWidth(100);
+		widgetIdColumn.getColumn().setText("CSS Id");
+		widgetIdColumn.setLabelProvider(new ColumnLabelProvider() {
+			@Override
+			public String getText(Object item) {
+				CSSStylableElement element = CssSpyDialog.getCSSElement(item);
+				return element.getCSSId();
+			}
+		});
 
 		TreeColumnLayout widgetsTableLayout = new TreeColumnLayout();
 		widgetsTableLayout.setColumnData(widgetTypeColumn.getColumn(),
 				new ColumnWeightData(50));
-		widgetsTableLayout.setColumnData(widgetColumnClass.getColumn(),
+		widgetsTableLayout.setColumnData(widgetIdColumn.getColumn(),
 				new ColumnWeightData(40));
-		widgetsTableLayout.setColumnData(widgetColumnId.getColumn(),
+		widgetsTableLayout.setColumnData(widgetClassColumn.getColumn(),
 				new ColumnWeightData(40));
 		widgetsComposite.setLayout(widgetsTableLayout);
 
