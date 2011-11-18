@@ -41,9 +41,11 @@ public class CSSPropertyProvider {
 		return handler.retrieveCSSProperty(element, propertyName, "", engine);
 	}
 
-	public void setValue(CSSValue value) throws Exception {
-		handler.applyCSSProperty(element, propertyName, value, "", engine);
+	public void setValue(String value) throws Exception {
+		CSSValue v = engine.parsePropertyValue(value);
+		handler.applyCSSProperty(element, propertyName, v, "", engine);
 	}
+
 
 	@Override
 	public String toString() {

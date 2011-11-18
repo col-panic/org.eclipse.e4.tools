@@ -19,16 +19,25 @@ import org.eclipse.e4.ui.css.core.engine.CSSEngine;
 import org.eclipse.e4.ui.css.swt.dom.WidgetElement;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.layout.TreeColumnLayout;
+import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnLabelProvider;
+import org.eclipse.jface.viewers.ColumnViewerEditor;
+import org.eclipse.jface.viewers.ColumnViewerEditorActivationStrategy;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ColumnWeightData;
+import org.eclipse.jface.viewers.EditingSupport;
+import org.eclipse.jface.viewers.FocusCellOwnerDrawHighlighter;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TableViewer;
 import org.eclipse.jface.viewers.TableViewerColumn;
+import org.eclipse.jface.viewers.TableViewerEditor;
+import org.eclipse.jface.viewers.TableViewerFocusCellManager;
+import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
@@ -433,6 +442,21 @@ public class CssSpyDialog extends Dialog {
 		cssPropertiesViewer.getTable().setHeaderVisible(true);
 		cssPropertiesViewer.setComparator(new ViewerComparator());
 
+		final TextCellEditor textCellEditor = new TextCellEditor(
+				cssPropertiesViewer.getTable());
+		TableViewerEditor
+				.create(cssPropertiesViewer,
+						new TableViewerFocusCellManager(cssPropertiesViewer,
+								new FocusCellOwnerDrawHighlighter(
+										cssPropertiesViewer)),
+						new ColumnViewerEditorActivationStrategy(
+								cssPropertiesViewer),
+						ColumnViewerEditor.TABBING_HORIZONTAL
+								| ColumnViewerEditor.TABBING_MOVE_TO_ROW_NEIGHBOR
+								| ColumnViewerEditor.TABBING_VERTICAL
+								| ColumnViewerEditor.KEYBOARD_ACTIVATION);
+
+
 		TableViewerColumn propName = new TableViewerColumn(cssPropertiesViewer,
 				SWT.NONE);
 		propName.getColumn().setWidth(100);
@@ -458,6 +482,41 @@ public class CssSpyDialog extends Dialog {
 							+ ": " + e);
 					return null;
 				}
+			}
+		});
+		propValue.setEditingSupport(new EditingSupport(cssPropertiesViewer) {
+			@Override
+			protected CellEditor getCellEditor(Object element) {
+				// do the fancy footwork here to return an appropriate editor to
+				// the value-type
+				return textCellEditor;
+			}
+
+			@Override
+			protected boolean canEdit(Object element) {
+				return true;
+			}
+
+			@Override
+			protected Object getValue(Object element) {
+				try {
+					return ((CSSPropertyProvider) element).getValue();
+				} catch (Exception e) {
+					return "";
+				}
+			}
+
+			@Override
+			protected void setValue(Object element, Object value) {
+				try {
+					CSSPropertyProvider provider = (CSSPropertyProvider) element;
+					provider.setValue((String) value);
+				} catch (Exception e) {
+					MessageDialog.openError(getShell(), "Error",
+							"Unable to set property:\n\n"
+									+ e.getMessage());
+				}
+				cssPropertiesViewer.update(element, null);
 			}
 		});
 
