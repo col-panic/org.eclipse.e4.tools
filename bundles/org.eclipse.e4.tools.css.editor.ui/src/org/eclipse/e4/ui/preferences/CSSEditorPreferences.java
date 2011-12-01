@@ -34,6 +34,7 @@ import org.eclipse.e4.ui.css.swt.theme.IThemeEngine;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.model.application.ui.basic.MWindow;
 import org.eclipse.e4.ui.workbench.IPresentationEngine;
+import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.text.IDocument;
 import org.eclipse.swt.SWT;
@@ -65,6 +66,7 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 		IWorkbenchWindow wbw = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		MWindow hostWin = (MWindow) wbw.getService(MWindow.class);
 		EPartService partService = hostWin.getContext().get(EPartService.class);
+		EModelService modelService = hostWin.getContext().get(EModelService.class);
 		MPart editor = partService.createPart(CompatibilityEditor.MODEL_ELEMENT_ID);
 		engine = hostWin.getContext().get(IThemeEngine.class);
 	
@@ -79,19 +81,16 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 		IEclipseContext localContext = hostWin.getContext().createChild();
 		localContext.set(IEditorInput.class, input);
 		localContext.set(EditorReference.class, reference);
-		// This is subtle; unless the element is hooked into the  model it won't
-		// fire events
-		hostWin.getSharedElements().add(editor);
 
 		// Render it
-		IPresentationEngine renderer = hostWin.getContext().get(IPresentationEngine.class);
 		Composite composite3 = new Composite(parent, SWT.BORDER);
 		composite3.setLayout(new FillLayout());
 		GridData data = new GridData(SWT.CENTER, SWT.CENTER, true, true, 2, 2);
 		data.widthHint = 500;
 		data.heightHint = 500;
 		composite3.setLayoutData(data);
-		Object createdElement = renderer.createGui(editor, composite3, localContext);
+		
+		modelService.hostElement(editor, hostWin, composite3, localContext);
 		partService.activate(editor);
 		IEditorPart tmpEditor = editor.getContext().get(IEditorPart.class);
 		if (tmpEditor instanceof XtextEditor) {
