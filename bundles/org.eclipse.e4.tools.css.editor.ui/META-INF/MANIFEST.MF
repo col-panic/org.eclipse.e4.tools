@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: org.eclipse.e4.tools.css.editor.ui
 Bundle-Vendor: My Company
-Bundle-Version: 1.0.0
+Bundle-Version: 0.12.0.qualifier
 Bundle-SymbolicName: org.eclipse.e4.tools.css.editor.ui; singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.eclipse.e4.tools.css.editor;visibility:=reexport,
