@@ -17,10 +17,6 @@ import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.core.di.annotations.Optional;
 import org.eclipse.e4.core.services.statusreporter.StatusReporter;
-import org.eclipse.e4.ui.css.core.engine.CSSEngine;
-import org.eclipse.e4.ui.css.swt.engine.CSSSWTEngineImpl;
-import org.eclipse.e4.ui.css.swt.internal.theme.ThemeEngine;
-import org.eclipse.e4.ui.css.swt.theme.IThemeEngine;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
@@ -46,20 +42,5 @@ public class OpenSpyHandler {
         CssSpyDialog spy = new CssSpyDialog(control.getShell());
         spy.setSpecimen(control);
 		spy.open();
-	}
-
-	private CSSEngine findCSSEngine() {
-		if(display != null) {
-			Object themeEngine = display.getData("org.eclipse.e4.ui.css.swt.theme");
-			if(themeEngine instanceof ThemeEngine) { return ((ThemeEngine)themeEngine)
-					.getCSSEngine(); }
-		}
-		if(context != null) {
-			Object themeEngine = context.get(IThemeEngine.class);
-			if(themeEngine instanceof ThemeEngine) { return ((ThemeEngine)themeEngine)
-					.getCSSEngine(); }
-		}
-		// otherwise just create a copy of the engine.
-		return new CSSSWTEngineImpl(display, true);
 	}
 }

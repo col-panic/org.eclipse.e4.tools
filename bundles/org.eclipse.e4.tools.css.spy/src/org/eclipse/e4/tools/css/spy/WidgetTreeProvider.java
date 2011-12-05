@@ -38,35 +38,21 @@ public class WidgetTreeProvider implements ITreeContentProvider {
     public Object[] getChildren(Object parentElement) {
         CSSStylableElement element = CssSpyDialog.getCSSElement(parentElement);
         if (element == null) {
-            return new Object[0];
+			return EMPTY_ARRAY;
         }
         NodeList kids = element.getChildNodes();
         ArrayList<Object> children = new ArrayList<Object>(kids.getLength());
         for (int i = 0; i < kids.getLength(); i++) {
 			children.add(((CSSStylableElement) kids.item(i)).getNativeWidget());
         }
-        //        if (parentElement instanceof Shell) {
-        //            // ToolBar is part of the children
-        //            //Collections.addAll(children, ((Shell) parentElement).getToolBar());
-        //            Collections.addAll(children, ((Shell) parentElement).getMenuBar());
-        //        }
-        //        if (parentElement instanceof Menu) {
-        //            Collections.addAll(children, ((Menu) parentElement).getItems());
-        //        }
-        //        if (parentElement instanceof ToolBar) {
-        //            Collections.addAll(children, ((ToolBar) parentElement).getItems());
-        //        }
-        //        if (parentElement instanceof Composite) {
-        //            Collections.addAll(children, ((Composite) parentElement).getChildren());
-        //        }
         return children.toArray();
     }
 
     public Object getParent(Object element) {
-        //        if(element instanceof Item) {
-        //            return ((Item)element).get???
-        //        }
-        return ((Control) element).getParent();
+		if (element instanceof Control) {
+			return ((Control) element).getParent();
+		}
+		return null;
     }
 
     public boolean hasChildren(Object element) {

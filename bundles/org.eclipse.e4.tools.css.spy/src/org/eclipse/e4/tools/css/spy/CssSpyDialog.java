@@ -513,7 +513,9 @@ public class CssSpyDialog extends Dialog {
 			@Override
 			protected void setValue(Object element, Object value) {
 				try {
-					if(value == null || ((String)value).trim().isEmpty()) { return; }
+					if (value == null || ((String) value).trim().length() == 0) {
+						return;
+					}
 					CSSPropertyProvider provider = (CSSPropertyProvider) element;
 					provider.setValue((String) value);
 				} catch (Throwable e) {
@@ -635,7 +637,7 @@ public class CssSpyDialog extends Dialog {
 	private void performCSSSearch(String text) {
 		disposeHighlights();
 		widgetTreeViewer.collapseAll();
-		if (text.trim().isEmpty()) {
+		if (text.trim().length() == 0) {
 			return;
 		}
 		searchInProgress = text;

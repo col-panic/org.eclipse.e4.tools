@@ -39,7 +39,7 @@ public class CSSPropertiesContentProvider implements IStructuredContentProvider 
             this.cssEngine = WidgetElement.getEngine((Widget) input.getNativeWidget());
         } else if (newInput instanceof Widget) {
             this.cssEngine = WidgetElement.getEngine((Widget) newInput);
-            this.input = (CSSStylableElement) cssEngine.getElement((Widget) newInput);
+			this.input = (CSSStylableElement) cssEngine.getElement(newInput);
         }
     }
 
