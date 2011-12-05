@@ -17,7 +17,6 @@ import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Widget;
 import org.w3c.dom.NodeList;
 
 public class WidgetTreeProvider implements ITreeContentProvider {
@@ -44,7 +43,7 @@ public class WidgetTreeProvider implements ITreeContentProvider {
         NodeList kids = element.getChildNodes();
         ArrayList<Object> children = new ArrayList<Object>(kids.getLength());
         for (int i = 0; i < kids.getLength(); i++) {
-            children.add((Widget) ((CSSStylableElement) kids.item(i)).getNativeWidget());
+			children.add(((CSSStylableElement) kids.item(i)).getNativeWidget());
         }
         //        if (parentElement instanceof Shell) {
         //            // ToolBar is part of the children

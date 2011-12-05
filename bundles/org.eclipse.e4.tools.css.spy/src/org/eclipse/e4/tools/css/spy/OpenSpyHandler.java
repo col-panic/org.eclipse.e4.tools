@@ -49,13 +49,13 @@ public class OpenSpyHandler {
 	}
 
 	private CSSEngine findCSSEngine() {
-		if(context != null) {
-			Object themeEngine = context.get(IThemeEngine.class);
+		if(display != null) {
+			Object themeEngine = display.getData("org.eclipse.e4.ui.css.swt.theme");
 			if(themeEngine instanceof ThemeEngine) { return ((ThemeEngine)themeEngine)
 					.getCSSEngine(); }
 		}
-		if(display != null) {
-			Object themeEngine = display.getData("org.eclipse.e4.ui.css.swt.theme");
+		if(context != null) {
+			Object themeEngine = context.get(IThemeEngine.class);
 			if(themeEngine instanceof ThemeEngine) { return ((ThemeEngine)themeEngine)
 					.getCSSEngine(); }
 		}

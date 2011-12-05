@@ -386,8 +386,11 @@ public class CssSpyDialog extends Dialog {
 				StringBuilder sb = new StringBuilder();
 				sb.append(element.getLocalName()).append(" (")
 						.append(element.getNamespaceURI()).append(")");
-				sb.append("\nClasses:\n  ");
-				Activator.join(sb, element.getCSSClass().split(" +"), "\n  ");
+				if (element.getCSSClass() != null) {
+					sb.append("\nClasses:\n  ");
+					Activator.join(sb, element.getCSSClass().split(" +"),
+							"\n  ");
+				}
 				return sb.toString();
 			}
 		});
@@ -500,7 +503,8 @@ public class CssSpyDialog extends Dialog {
 			@Override
 			protected Object getValue(Object element) {
 				try {
-					return ((CSSPropertyProvider) element).getValue();
+					String value = ((CSSPropertyProvider) element).getValue();
+					return value == null ? "" : value;
 				} catch (Exception e) {
 					return "";
 				}
@@ -509,9 +513,10 @@ public class CssSpyDialog extends Dialog {
 			@Override
 			protected void setValue(Object element, Object value) {
 				try {
+					if(value == null || ((String)value).trim().isEmpty()) { return; }
 					CSSPropertyProvider provider = (CSSPropertyProvider) element;
 					provider.setValue((String) value);
-				} catch (Exception e) {
+				} catch (Throwable e) {
 					MessageDialog.openError(getShell(), "Error",
 							"Unable to set property:\n\n"
 									+ e.getMessage());
