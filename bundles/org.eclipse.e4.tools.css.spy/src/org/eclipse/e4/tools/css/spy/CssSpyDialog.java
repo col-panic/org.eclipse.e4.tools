@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
 import org.eclipse.e4.ui.css.core.engine.CSSEngine;
 import org.eclipse.e4.ui.css.swt.dom.WidgetElement;
+import org.eclipse.e4.ui.css.swt.engine.CSSSWTEngineImpl;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -81,22 +82,29 @@ public class CssSpyDialog extends Dialog {
 	public static CSSStylableElement getCSSElement(Object o) {
 		if (o instanceof CSSStylableElement) {
 			return (CSSStylableElement) o;
-		} else if (o instanceof Widget) {
-			CSSEngine engine = WidgetElement.getEngine((Widget) o);
-			return (CSSStylableElement) engine.getElement(o);
+        } else {
+            CSSEngine engine = getCSSEngine(o);
+            if (engine != null) {
+                return (CSSStylableElement) engine.getElement(o);
+            }
 		}
 		return null;
 	}
 
 	/** @return the CSS engine governing the argument, or null if none */
 	public static CSSEngine getCSSEngine(Object o) {
+        CSSEngine engine = null;
 		if (o instanceof CSSStylableElement) {
 			CSSStylableElement element = (CSSStylableElement) o;
-			return WidgetElement.getEngine((Widget) element.getNativeWidget());
-		} else if (o instanceof Widget) {
-			return WidgetElement.getEngine((Widget) o);
+            engine = WidgetElement.getEngine((Widget) element.getNativeWidget());
+        }
+        if (engine == null && o instanceof Widget) {
+            engine = WidgetElement.getEngine((Widget) o);
+        }
+        if (engine == null && Display.getCurrent() != null) {
+            engine = new CSSSWTEngineImpl(Display.getCurrent());
 		}
-		return null;
+        return engine;
 	}
 
 	private Display display;
@@ -173,7 +181,7 @@ public class CssSpyDialog extends Dialog {
 		}
 		shown = current;
 
-		CSSEngine engine = WidgetElement.getEngine(shown);
+        CSSEngine engine = getCSSEngine(shown);
 		CSSStylableElement element = (CSSStylableElement) engine
 				.getElement(shown);
 		if (element == null) {
@@ -646,7 +654,7 @@ public class CssSpyDialog extends Dialog {
 			return;
 		}
 
-		CSSEngine engine = WidgetElement.getEngine(shown);
+        CSSEngine engine = getCSSEngine(shown);
 		try {
 			SelectorList selectors = engine.parseSelectors(text);
 			processCSSSearch(text, null, engine, selectors, element);

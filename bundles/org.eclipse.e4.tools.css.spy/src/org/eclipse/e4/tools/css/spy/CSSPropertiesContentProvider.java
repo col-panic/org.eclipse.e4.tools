@@ -18,7 +18,6 @@ import java.util.Map.Entry;
 import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
 import org.eclipse.e4.ui.css.core.dom.properties.ICSSPropertyHandler;
 import org.eclipse.e4.ui.css.core.engine.CSSEngine;
-import org.eclipse.e4.ui.css.swt.dom.WidgetElement;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.widgets.Widget;
@@ -36,9 +35,9 @@ public class CSSPropertiesContentProvider implements IStructuredContentProvider 
     public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
         if (newInput instanceof CSSStylableElement) {
             this.input = (CSSStylableElement) newInput;
-            this.cssEngine = WidgetElement.getEngine((Widget) input.getNativeWidget());
+            this.cssEngine = CssSpyDialog.getCSSEngine((Widget) input.getNativeWidget());
         } else if (newInput instanceof Widget) {
-            this.cssEngine = WidgetElement.getEngine((Widget) newInput);
+            this.cssEngine = CssSpyDialog.getCSSEngine((Widget) newInput);
 			this.input = (CSSStylableElement) cssEngine.getElement(newInput);
         }
     }
