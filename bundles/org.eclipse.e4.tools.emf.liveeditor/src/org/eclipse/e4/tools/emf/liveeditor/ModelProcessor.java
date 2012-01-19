@@ -29,7 +29,7 @@ public class ModelProcessor {
 		application.getCommands().add(command);
 		
 		MHandler handler = MCommandsFactory.INSTANCE.createHandler();
-		handler.setContributionURI("platform:/plugin/org.eclipse.e4.tools.emf.liveeditor/org.eclipse.e4.tools.emf.liveeditor.OpenLiveDialogHandler");
+		handler.setContributionURI("bundleclass://org.eclipse.e4.tools.emf.liveeditor/org.eclipse.e4.tools.emf.liveeditor.OpenLiveDialogHandler");
 		handler.setCommand(command);
 		application.getHandlers().add(handler);
 		
@@ -47,8 +47,8 @@ public class ModelProcessor {
 		descriptor.getTags().add("categoryTag:General");
 		
 		descriptor.setLabel("Live Application Model");
-		descriptor.setContributionURI("platform:/plugin/org.eclipse.e4.tools.emf.liveeditor/org.eclipse.e4.tools.emf.liveeditor.LivePartDelegator");
-		descriptor.setContributorURI("platform:/plugin/org.eclipse.e4.tools.emf.liveeditor");
+		descriptor.setContributionURI("bundleclass://org.eclipse.e4.tools.emf.liveeditor/org.eclipse.e4.tools.emf.liveeditor.LivePartDelegator");
+		descriptor.setContributorURI("bundleclass://org.eclipse.e4.tools.emf.liveeditor");
 		descriptor.setIconURI("platform:/plugin/org.eclipse.e4.tools.emf.liveeditor/icons/full/obj16/application_lightning.png");
 		application.getDescriptors().add(descriptor);
 	}

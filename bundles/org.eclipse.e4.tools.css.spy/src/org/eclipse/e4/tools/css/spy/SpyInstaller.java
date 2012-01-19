@@ -24,7 +24,7 @@ import org.eclipse.e4.ui.model.application.commands.MKeyBinding;
 public class SpyInstaller {
 	public static final String OPEN_SPY_COMMAND_ID = "org.eclipse.e4.css.OpenSpy";
 	private static final String SPY_HANDLER_ID = OpenSpyHandler.class.getName();
-    private static final String SPY_HANDLER_URI = "platform:/plugin/org.eclipse.e4.tools.css.spy/"
+    private static final String SPY_HANDLER_URI = "bundleclass://org.eclipse.e4.tools.css.spy/"
 			+ OpenSpyHandler.class.getName();
 
 	@Inject
