@@ -11,7 +11,6 @@
 package org.eclipse.e4.tools.css.spy;
 
 import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
-import org.eclipse.e4.ui.css.core.dom.properties.ICSSPropertyHandler;
 import org.eclipse.e4.ui.css.core.engine.CSSEngine;
 import org.w3c.dom.css.CSSValue;
 
@@ -22,14 +21,12 @@ public class CSSPropertyProvider {
 
 	private String propertyName;
 	private CSSStylableElement element;
-	private ICSSPropertyHandler handler;
 	private CSSEngine engine;
 
 	public CSSPropertyProvider(String propertyName, CSSStylableElement element,
-			ICSSPropertyHandler handler, CSSEngine engine) {
+			CSSEngine engine) {
 		this.propertyName = propertyName;
 		this.element = element;
-		this.handler = handler;
 		this.engine = engine;
 	}
 
@@ -38,12 +35,12 @@ public class CSSPropertyProvider {
 	}
 
 	public String getValue() throws Exception {
-		return handler.retrieveCSSProperty(element, propertyName, "", engine);
+		return engine.retrieveCSSProperty(element, propertyName, "");
 	}
 
 	public void setValue(String value) throws Exception {
 		CSSValue v = engine.parsePropertyValue(value);
-		handler.applyCSSProperty(element, propertyName, v, "", engine);
+		engine.applyCSSProperty(element, propertyName, v, "");
 	}
 
 

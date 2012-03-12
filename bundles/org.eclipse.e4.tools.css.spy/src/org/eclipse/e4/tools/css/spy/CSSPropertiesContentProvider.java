@@ -11,12 +11,10 @@
 package org.eclipse.e4.tools.css.spy;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
-import org.eclipse.e4.ui.css.core.dom.properties.ICSSPropertyHandler;
 import org.eclipse.e4.ui.css.core.engine.CSSEngine;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
 import org.eclipse.jface.viewers.Viewer;
@@ -43,14 +41,11 @@ public class CSSPropertiesContentProvider implements IStructuredContentProvider 
     }
 
     public Object[] getElements(Object inputElement) {
-		Map<String, ICSSPropertyHandler> handlerMap = cssEngine
-				.getCSSPropertyHandlers(input);
-        if (handlerMap == null) {
-            return null;
-        }
-        List<CSSPropertyProvider> properties = new ArrayList<CSSPropertyProvider>(handlerMap.size());
-        for (Entry<String, ICSSPropertyHandler> entry : handlerMap.entrySet()) {
-            properties.add(new CSSPropertyProvider(entry.getKey(), input, entry.getValue(), cssEngine));
+		Collection<String> propertyNames = cssEngine.getCSSProperties(input);
+		List<CSSPropertyProvider> properties = new ArrayList<CSSPropertyProvider>(
+				propertyNames.size());
+		for (String propertyName : propertyNames) {
+            properties.add(new CSSPropertyProvider(propertyName, input, cssEngine));
         }
         return properties.toArray();
     }
