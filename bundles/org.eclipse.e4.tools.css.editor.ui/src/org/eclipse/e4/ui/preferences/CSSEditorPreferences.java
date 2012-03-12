@@ -1,39 +1,29 @@
 package org.eclipse.e4.ui.preferences;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
-import java.nio.charset.UnmappableCharacterException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.core.filebuffers.IFileBufferStatusCodes;
-import org.eclipse.core.internal.filebuffers.FileBuffersPlugin;
-import org.eclipse.core.internal.filebuffers.NLSUtility;
 import org.eclipse.core.resources.IFile;
 import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.Assert;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
-import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Status;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.ui.css.swt.internal.theme.ThemeEngine;
 import org.eclipse.e4.ui.css.swt.theme.ITheme;
 import org.eclipse.e4.ui.css.swt.theme.IThemeEngine;
 import org.eclipse.e4.ui.model.application.ui.basic.MPart;
 import org.eclipse.e4.ui.model.application.ui.basic.MWindow;
-import org.eclipse.e4.ui.workbench.IPresentationEngine;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.text.IDocument;
@@ -59,10 +49,12 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 	ITheme selection;
 	XtextEditor cssEditor;
 	IThemeEngine engine;
+	boolean resetCurrentTheme;
 	
 	@SuppressWarnings("restriction")
 	@Override
 	public void createContents(Composite parent) {
+		resetCurrentTheme = false;
 		IWorkbenchWindow wbw = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		MWindow hostWin = (MWindow) wbw.getService(MWindow.class);
 		EPartService partService = hostWin.getContext().get(EPartService.class);
@@ -117,14 +109,22 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 	public void performOK() {
 		if (cssEditor.isDirty()) {
 			// make a copy of file
-			// cssEditor.doSave(new NullProgressMonitor());
 			IDocumentProvider docProvider = cssEditor.getDocumentProvider();
 			
 			IEditorInput editorInput = cssEditor.getEditorInput();
 			IDocument doc = docProvider.getDocument(editorInput);
 			String more = doc.get();
-			IPath path = new Path(
-					System.getProperty("user.home") + System.getProperty("file.separator") + ".e4css" + System.getProperty("file.separator") + editorInput.getName()); //$NON-NLS-1$ //$NON-NLS-2$ //$NON-NLS-3$
+			//check for .e4css folder
+			String e4CSSPath = System.getProperty("user.home") + System.getProperty("file.separator") + ".e4css";
+			File e4CSS = new File(e4CSSPath);
+			if (!e4CSS.exists()) {
+				File userHome = e4CSS.getParentFile( );
+				if ( userHome.exists() && userHome.canWrite() )
+				{
+					e4CSS.mkdir();
+				}
+			}
+			IPath path = new Path(e4CSSPath + System.getProperty("file.separator") + editorInput.getName()); //$NON-NLS-1$
 			
 			byte[] bytes = more.getBytes();
 			FileOutputStream outputStream = null;
@@ -143,10 +143,24 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 
 			if (engine instanceof ThemeEngine) {
 				ArrayList<String> styleSheets = new ArrayList<String>();
-				styleSheets.add(path.toOSString());
-				((ThemeEngine) engine).themeModified(selection, styleSheets );
+				try {
+					URL styleSheetURL = FileLocator.toFileURL(path.toFile().toURI().toURL());
+					styleSheets.add(styleSheetURL.toString());
+					((ThemeEngine) engine).themeModified(selection, styleSheets );
+				} catch (MalformedURLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
 			cssEditor.doRevertToSaved();
+		}
+		
+		if (resetCurrentTheme) {
+			((ThemeEngine) engine).resetCurrentTheme();
+			resetCurrentTheme = false;
 		}
 	}
 
@@ -159,6 +173,10 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 
 		if (engine instanceof ThemeEngine) {
 			List<String> ss = ((ThemeEngine) engine).getStylesheets(selection);
+			List<String> mod = ((ThemeEngine) engine).getModifiedStylesheets(selection);
+			if (mod.size() > 0) {
+				ss = mod;
+			}
 			if (ss.size() > 0) {
 				// For now just get the first element
 				String path = ss.get(0);
@@ -187,6 +205,7 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 			IPath location = new Path(styleSheetURL.getPath());
 			// IPath location = new Path(styleSheetURL.getPath());
 			file = newProject.getFile(location.lastSegment());
+			file.delete(true, null);
 			if (!file.exists())
 				file.createLink(location, IResource.NONE, null);
 		} catch (CoreException e) {
@@ -203,7 +222,28 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 
 	@Override
 	public void performDefaults() {
-		//reset
+		List<String> mod = ((ThemeEngine) engine).getModifiedStylesheets(selection);
+		if (mod.size() > 0) {
+		
+			// For now just get the first element
+			String path = mod.get(0);
+			((ThemeEngine) engine).getCSSEngine().getResourcesLocatorManager();
+			try {
+				
+				URL styleSheetURL = FileLocator.toFileURL(new URL(path));
+				File file = new File(styleSheetURL.getFile());
+				if (file.exists()) file.delete();
+			} catch (MalformedURLException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		if (engine instanceof ThemeEngine) ((ThemeEngine) engine).resetModifiedStylesheets(selection);
+		IFile file = updateInput();
+		IEditorInput input = new FileEditorInput(file);
+		cssEditor.setInput(input);
+		resetCurrentTheme = true;
 	}
 
 }
