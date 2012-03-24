@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Manumitting Technologies, Inc.
+ * Copyright (c) 2011, 2012 Manumitting Technologies, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -11,9 +11,15 @@
 package org.eclipse.e4.tools.css.spy;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
 import org.eclipse.e4.ui.css.core.engine.CSSEngine;
 import org.eclipse.e4.ui.css.swt.dom.WidgetElement;
@@ -21,6 +27,8 @@ import org.eclipse.e4.ui.css.swt.engine.CSSSWTEngineImpl;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.layout.TableColumnLayout;
 import org.eclipse.jface.layout.TreeColumnLayout;
 import org.eclipse.jface.viewers.CellEditor;
@@ -31,6 +39,7 @@ import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
 import org.eclipse.jface.viewers.ColumnWeightData;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.FocusCellOwnerDrawHighlighter;
+import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
@@ -100,6 +109,9 @@ public class CssSpyDialog extends Dialog {
             engine = WidgetElement.getEngine((Widget) element.getNativeWidget());
         }
         if (engine == null && o instanceof Widget) {
+			if (((Widget) o).isDisposed()) {
+				return null;
+			}
             engine = WidgetElement.getEngine((Widget) o);
         }
         if (engine == null && Display.getCurrent() != null) {
@@ -112,8 +124,10 @@ public class CssSpyDialog extends Dialog {
 	private Widget specimen;
 	private Widget shown;
 
-	private TableViewer cssPropertiesViewer;
 	private TreeViewer widgetTreeViewer;
+	private WidgetTreeProvider widgetTreeProvider;
+	private Button showAllShells;
+	private TableViewer cssPropertiesViewer;
 	private Text cssRules;
 
 	private List<Shell> highlights = new LinkedList<Shell>();
@@ -189,18 +203,57 @@ public class CssSpyDialog extends Dialog {
 			return;
 		}
 
-		widgetTreeViewer
-				.setInput(new Object[] { shown instanceof Control ? ((Control) shown)
-						.getShell() : shown });
-		widgetTreeViewer.reveal(shown);
-		widgetTreeViewer.setSelection(new StructuredSelection(shown));
+		updateWidgetTreeInput();
+		revealAndSelect(Collections.singletonList(shown));
+	}
 
-		populate(shown);
+	private <T> void revealAndSelect(List<T> elements) {
+		widgetTreeViewer.setSelection(new StructuredSelection(elements), true);
+	}
+
+	private void updateForWidgetSelection(ISelection sel) {
+		disposeHighlights();
+		if (sel.isEmpty()) {
+			return;
+		}
+		StructuredSelection selection = (StructuredSelection) sel;
+		for (Object s : selection.toList()) {
+			if (s instanceof Widget) {
+				highlightWidget((Widget) s);
+			}
+		}
+		populate(selection.size() == 1
+				&& selection.getFirstElement() instanceof Widget ? (Widget) selection
+				.getFirstElement() : null);
+	}
+
+	private void updateWidgetTreeInput() {
+		if (showAllShells.getSelection()) {
+			widgetTreeViewer.setInput(display);
+		} else {
+			widgetTreeViewer
+					.setInput(new Object[] { shown instanceof Control ? ((Control) shown)
+							.getShell() : shown });
+		}
+		performCSSSearch(new NullProgressMonitor());
 	}
 
 	protected void populate(Widget selected) {
+		if (selected == null) {
+			cssPropertiesViewer.setInput(null);
+			cssRules.setText("");
+			return;
+		}
+		if (selected.isDisposed()) {
+			cssPropertiesViewer.setInput(null);
+			cssRules.setText("*DISPOSED*");
+			return;
+		}
+
 		CSSStylableElement element = getCSSElement(selected);
 		if (element == null) {
+			cssPropertiesViewer.setInput(null);
+			cssRules.setText("Not a stylable element");
 			return;
 		}
 
@@ -236,7 +289,6 @@ public class CssSpyDialog extends Dialog {
 			Activator.join(sb, element.getCSSClass().split(" +"), "\n  ");
 		}
 
-		// FIXME: shouldn't this be getCSSStyle?
 		if (element.getAttribute("style") != null) {
 			sb.append("\n\nSWT Style Bits:\n  ");
 			Activator.join(sb, element.getAttribute("style").split(" +"),
@@ -248,8 +300,30 @@ public class CssSpyDialog extends Dialog {
 
 		// this is useful for diagnosing issues
 		if (element.getNativeWidget() instanceof Composite) {
-			sb.append("\n\nSWT Layout:\n  ").append(
+			sb.append("\n\nSWT Layout: ").append(
 					((Composite) element.getNativeWidget()).getLayout());
+		}
+		Rectangle bounds = getBounds(selected);
+		if (bounds != null) {
+			sb.append("\nBounds: x=").append(bounds.x).append(" y=")
+					.append(bounds.y);
+			sb.append(" h=").append(bounds.height).append(" w=")
+					.append(bounds.width);
+		}
+
+		if (element.getNativeWidget() instanceof Widget) {
+			Widget w = (Widget) element.getNativeWidget();
+			if (w.getData() != null) {
+				sb.append("\nWidget data: ").append(w.getData());
+			}
+			if (w.getData(SWT.SKIN_ID) != null) {
+				sb.append("\nWidget Skin ID (").append(SWT.SKIN_ID)
+						.append("): ").append(w.getData(SWT.SKIN_ID));
+			}
+			if (w.getData(SWT.SKIN_CLASS) != null) {
+				sb.append("\nWidget Skin Class (").append(SWT.SKIN_CLASS)
+						.append("): ").append(w.getData(SWT.SKIN_CLASS));
+			}
 		}
 
 		cssRules.setText(sb.toString().trim());
@@ -258,8 +332,18 @@ public class CssSpyDialog extends Dialog {
 		highlightWidget(selected);
 	}
 
+	private Shell getShell(Widget widget) {
+		if (widget instanceof Control) {
+			return ((Control) widget).getShell();
+		}
+		return null;
+	}
+
+	/** Add a highlight-rectangle for the selected widget */
 	private void highlightWidget(Widget selected) {
-		widgetTreeViewer.reveal(selected);
+		if (selected == null || selected.isDisposed()) {
+			return;
+		}
 
 		Rectangle bounds = getBounds(selected); // relative to absolute display,
 												// not the widget
@@ -290,13 +374,6 @@ public class CssSpyDialog extends Dialog {
 
 		highlights.add(highlight);
 		highlightRegions.add(highlightRegion);
-	}
-
-	private Shell getShell(Widget widget) {
-		if (widget instanceof Control) {
-			return ((Control) widget).getShell();
-		}
-		return null;
 	}
 
 	private void disposeHighlights() {
@@ -344,12 +421,18 @@ public class CssSpyDialog extends Dialog {
 	protected Control createDialogArea(Composite parent) {
 		Composite outer = (Composite) super.createDialogArea(parent);
 
-		cssSearchBox = new Text(outer, SWT.BORDER | SWT.SEARCH
+		Composite top = new Composite(outer, SWT.NONE);
+		GridLayoutFactory.swtDefaults().numColumns(2).applyTo(top);
+		cssSearchBox = new Text(top, SWT.BORDER | SWT.SEARCH
 				| SWT.ICON_SEARCH | SWT.ICON_CANCEL);
 		cssSearchBox.setMessage("CSS Selector");
 		cssSearchBox.setToolTipText("Highlight matching widgets");
-		cssSearchBox.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true,
-				false, 1, 1));
+		GridDataFactory.fillDefaults().grab(true, false).applyTo(cssSearchBox);
+
+		showAllShells = new Button(top, SWT.CHECK);
+		showAllShells.setText("All shells");
+		GridDataFactory.swtDefaults().applyTo(showAllShells);
+		GridDataFactory.fillDefaults().applyTo(top);
 
 		SashForm sashForm = new SashForm(outer, SWT.VERTICAL);
 		sashForm.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, 1,
@@ -358,8 +441,10 @@ public class CssSpyDialog extends Dialog {
 		// / THE WIDGET TREE
 		Composite widgetsComposite = new Composite(sashForm, SWT.NONE);
 
-		widgetTreeViewer = new TreeViewer(widgetsComposite, SWT.BORDER);
-		widgetTreeViewer.setContentProvider(new WidgetTreeProvider());
+		widgetTreeViewer = new TreeViewer(widgetsComposite, SWT.BORDER
+				| SWT.MULTI);
+		widgetTreeProvider = new WidgetTreeProvider();
+		widgetTreeViewer.setContentProvider(widgetTreeProvider);
 		widgetTreeViewer.setAutoExpandLevel(0);
 		widgetTreeViewer.getTree().setLinesVisible(true);
 		widgetTreeViewer.getTree().setHeaderVisible(true);
@@ -568,12 +653,16 @@ public class CssSpyDialog extends Dialog {
 
 		cssSearchBox.addModifyListener(new ModifyListener() {
 			private Runnable updater;
+			private IProgressMonitor monitor;
 
 			public void modifyText(ModifyEvent e) {
+				if (monitor != null) {
+					monitor.setCanceled(false);
+				}
 				display.timerExec(200, updater = new Runnable() {
 					public void run() {
 						if (updater == this) {
-							performCSSSearch(cssSearchBox.getText());
+							performCSSSearch(monitor = new NullProgressMonitor());
 						}
 					}
 				});
@@ -592,10 +681,7 @@ public class CssSpyDialog extends Dialog {
 		widgetTreeViewer
 				.addSelectionChangedListener(new ISelectionChangedListener() {
 					public void selectionChanged(SelectionChangedEvent event) {
-						if (!event.getSelection().isEmpty()) {
-							populate((Widget) ((StructuredSelection) event
-									.getSelection()).getFirstElement());
-						}
+						updateForWidgetSelection(event.getSelection());
 					}
 				});
 		if (isLive()) {
@@ -624,6 +710,11 @@ public class CssSpyDialog extends Dialog {
 				}
 			}
 		});
+		showAllShells.addSelectionListener(new SelectionAdapter() {
+			public void widgetSelected(SelectionEvent e) {
+				updateWidgetTreeInput();
+			}
+		});
 
 		outer.addDisposeListener(new DisposeListener() {
 			public void widgetDisposed(DisposeEvent e) {
@@ -649,37 +740,56 @@ public class CssSpyDialog extends Dialog {
 		return outer;
 	}
 
-	private String searchInProgress;
+	protected void performCSSSearch(IProgressMonitor progress) {
+		List<Widget> widgets = new ArrayList<Widget>();
+		performCSSSearch(progress, cssSearchBox.getText(), widgets);
+		if (!progress.isCanceled()) {
+			revealAndSelect(widgets);
+		}
+	}
 
-	private void performCSSSearch(String text) {
-		disposeHighlights();
-		widgetTreeViewer.collapseAll();
+	private void performCSSSearch(IProgressMonitor monitor, String text,
+			Collection<Widget> results) {
 		if (text.trim().length() == 0) {
 			return;
 		}
-		searchInProgress = text;
-		CSSStylableElement element = getCSSElement(getShell(shown));
-		if (element == null) {
-			return;
-		}
+		widgetTreeViewer.collapseAll();
+		Object[] roots = widgetTreeProvider.getElements(widgetTreeViewer
+				.getInput());
+		monitor.beginTask("Searching for \"" + text + "\"", roots.length * 10);
+		for (Object root : roots) {
+			if (monitor.isCanceled()) {
+				return;
+			}
 
-        CSSEngine engine = getCSSEngine(shown);
-		try {
-			SelectorList selectors = engine.parseSelectors(text);
-			processCSSSearch(text, null, engine, selectors, element);
-		} catch (CSSParseException e) {
-			// ignore: e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			CSSStylableElement element = getCSSElement(root);
+			if (element == null) {
+				continue;
+			}
 
+			CSSEngine engine = getCSSEngine(root);
+			try {
+				SelectorList selectors = engine.parseSelectors(text);
+				monitor.worked(2);
+				processCSSSearch(new SubProgressMonitor(monitor, 8), engine,
+						selectors, element, null, results);
+			} catch (CSSParseException e) {
+				System.out.println(e.toString());
+			} catch (IOException e) {
+				System.out.println(e.toString());
+			}
+		}
+		monitor.done();
 	}
 
-	private void processCSSSearch(String text, String pseudo, CSSEngine engine,
-			SelectorList selectors, CSSStylableElement element) {
-		if (text != searchInProgress) {
+	private void processCSSSearch(IProgressMonitor monitor, CSSEngine engine,
+			SelectorList selectors, CSSStylableElement element, String pseudo,
+			Collection<Widget> results) {
+		if (monitor.isCanceled()) {
 			return;
 		}
+		NodeList children = element.getChildNodes();
+		monitor.beginTask("Searching", 5 + 5 * children.getLength());
 		boolean matched = false;
 		for (int i = 0; i < selectors.getLength(); i++) {
 			if (matched = engine.matches(selectors.item(i), element, pseudo)) {
@@ -687,16 +797,18 @@ public class CssSpyDialog extends Dialog {
 			}
 		}
 		if (matched) {
-			highlightWidget((Widget) element.getNativeWidget());
+			results.add((Widget) element.getNativeWidget());
 		}
-		NodeList children = element.getChildNodes();
+		monitor.worked(5);
 		for (int i = 0; i < children.getLength(); i++) {
-			if (text != searchInProgress) {
+			if (monitor.isCanceled()) {
 				return;
 			}
-			processCSSSearch(text, pseudo, engine, selectors,
-					(CSSStylableElement) children.item(i));
+			processCSSSearch(new SubProgressMonitor(monitor, 5), engine,
+					selectors, (CSSStylableElement) children.item(i), pseudo,
+					results);
 		}
+		monitor.done();
 	}
 
 	protected void dispose() {
