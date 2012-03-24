@@ -73,6 +73,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.swt.widgets.Widget;
+import org.w3c.css.sac.CSSParseException;
 import org.w3c.css.sac.SelectorList;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.css.CSSStyleDeclaration;
@@ -319,6 +320,14 @@ public class CssSpyDialog extends Dialog {
 			return control.getDisplay().map(control.getParent(), null, bounds);
 		} else if (widget instanceof ToolItem) {
 			ToolItem item = (ToolItem) widget;
+			Rectangle bounds = item.getBounds();
+			return item.getDisplay().map(item.getParent(), null, bounds);
+		} else if (widget instanceof org.eclipse.swt.custom.CTabItem) {
+			org.eclipse.swt.custom.CTabItem item = (org.eclipse.swt.custom.CTabItem) widget;
+			Rectangle bounds = item.getBounds();
+			return item.getDisplay().map(item.getParent(), null, bounds);
+		} else if (widget instanceof org.eclipse.e4.ui.widgets.CTabItem) {
+			org.eclipse.e4.ui.widgets.CTabItem item = (org.eclipse.e4.ui.widgets.CTabItem) widget;
 			Rectangle bounds = item.getBounds();
 			return item.getDisplay().map(item.getParent(), null, bounds);
 		}
@@ -658,6 +667,8 @@ public class CssSpyDialog extends Dialog {
 		try {
 			SelectorList selectors = engine.parseSelectors(text);
 			processCSSSearch(text, null, engine, selectors, element);
+		} catch (CSSParseException e) {
+			// ignore: e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
