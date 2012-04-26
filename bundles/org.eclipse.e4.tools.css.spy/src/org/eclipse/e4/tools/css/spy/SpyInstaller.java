@@ -14,7 +14,6 @@ import javax.inject.Inject;
 
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.MApplication;
-import org.eclipse.e4.ui.model.application.commands.MBindingContext;
 import org.eclipse.e4.ui.model.application.commands.MBindingTable;
 import org.eclipse.e4.ui.model.application.commands.MCommand;
 import org.eclipse.e4.ui.model.application.commands.MCommandsFactory;
@@ -68,7 +67,12 @@ public class SpyInstaller {
 		return hdlr;
 	}
 
-	private void installSpyBinding(String bindingContextId, MCommand cmd, String keySeq) {
+	private void installSpyBinding(String bindingContextId, MCommand cmd,
+			String keySeq) {
+		// there is a one-to-one mapping between binding contexts and
+		// binding tables, though binding tables may not necessarily
+		// guaranteed an element id.
+		MBindingTable bindingTable = null;
 		for(MBindingTable table : app.getBindingTables()) {
 			for(MKeyBinding binding : table.getBindings()) {
 				if(binding.getCommand() == cmd) {
@@ -76,33 +80,17 @@ public class SpyInstaller {
 					return;
 				}
 			}
-		}
-
-		MBindingContext context = null;
-		for(MBindingContext ctxt : app.getBindingContexts()) {
-			if(ctxt.getElementId().equals(bindingContextId)) {
-				context = ctxt;
-				break;
-			}
-		}
-		if(context == null) {
-			System.err.println("Cannot find binding context: " + bindingContextId);
-			return;
-		}
-
-		MBindingTable bindingTable = null;
-		String tableId = "bt." + cmd.getElementId();
-		for(MBindingTable table : app.getBindingTables()) {
-			if(tableId.equals(table.getElementId())) {
+			if (table.getBindingContext() != null
+					&& bindingContextId.equals(table.getBindingContext()
+							.getElementId())) {
 				bindingTable = table;
 			}
 		}
 
 		if(bindingTable == null) {
-			bindingTable = MCommandsFactory.INSTANCE.createBindingTable();
-			bindingTable.setElementId(tableId);
-			bindingTable.setBindingContext(context);
-			app.getBindingTables().add(bindingTable);
+			System.err.println("Cannot find table for binding context: "
+					+ bindingContextId);
+			return;
 		}
 
 		MKeyBinding binding = MCommandsFactory.INSTANCE.createKeyBinding();
