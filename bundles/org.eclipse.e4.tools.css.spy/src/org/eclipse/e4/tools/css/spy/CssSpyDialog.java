@@ -55,6 +55,7 @@ import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.events.DisposeEvent;
 import org.eclipse.swt.events.DisposeListener;
@@ -399,15 +400,11 @@ public class CssSpyDialog extends Dialog {
 			ToolItem item = (ToolItem) widget;
 			Rectangle bounds = item.getBounds();
 			return item.getDisplay().map(item.getParent(), null, bounds);
-		} else if (widget instanceof org.eclipse.swt.custom.CTabItem) {
-			org.eclipse.swt.custom.CTabItem item = (org.eclipse.swt.custom.CTabItem) widget;
+		} else if (widget instanceof CTabItem) {
+			CTabItem item = (CTabItem) widget;
 			Rectangle bounds = item.getBounds();
 			return item.getDisplay().map(item.getParent(), null, bounds);
-		} else if (widget instanceof org.eclipse.e4.ui.widgets.CTabItem) {
-			org.eclipse.e4.ui.widgets.CTabItem item = (org.eclipse.e4.ui.widgets.CTabItem) widget;
-			Rectangle bounds = item.getBounds();
-			return item.getDisplay().map(item.getParent(), null, bounds);
-		}
+		} 
 		// FIXME: figure out how to map items to a position
 		return null;
 	}

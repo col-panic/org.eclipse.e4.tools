@@ -17,6 +17,7 @@ import java.util.List;
 import org.eclipse.e4.ui.css.core.dom.CSSStylableElement;
 import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.swt.custom.CTabItem;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -65,10 +66,8 @@ public class WidgetTreeProvider implements ITreeContentProvider {
 		if (element instanceof Control) {
 			Control control = (Control) element;
 			return control.isDisposed() ? null : control.getParent();
-		} else if (element instanceof org.eclipse.swt.custom.CTabItem) {
-			return ((org.eclipse.swt.custom.CTabItem) element).getParent();
-		} else if (element instanceof org.eclipse.e4.ui.widgets.CTabItem) {
-			return ((org.eclipse.e4.ui.widgets.CTabItem) element).getParent();
+		} else if (element instanceof CTabItem) {
+			return ((CTabItem) element).getParent();
 		} else if (element instanceof ToolItem) {
 			return ((ToolItem) element).getParent();
 		}
