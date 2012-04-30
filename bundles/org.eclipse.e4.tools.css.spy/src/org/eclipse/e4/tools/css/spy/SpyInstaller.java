@@ -26,48 +26,64 @@ public class SpyInstaller {
     private static final String SPY_HANDLER_URI = "bundleclass://org.eclipse.e4.tools.css.spy/"
 			+ OpenSpyHandler.class.getName();
 
+	public static final String OPEN_SCRATCHPAD_COMMAND_ID = "org.eclipse.e4.css.OpenSctachpad";
+	private static final String SCRATCHPAD_HANDLER_ID = OpenScratchpadHandler.class
+			.getName();
+	private static final String SCRATCHPAD_HANDLER_URI = "bundleclass://org.eclipse.e4.tools.css.spy/"
+			+ OpenScratchpadHandler.class.getName();
+
 	@Inject
 	protected MApplication app;
 
 	@Execute
 	public void execute() {
-		MCommand cmd = installSpyCommand();
-		installSpyHandler(cmd);
-        installSpyBinding("org.eclipse.ui.contexts.dialogAndWindow", cmd, "M2+M3+F4");
+		MCommand openSpyCommand = installCommand("Open CSS Spy",
+				OPEN_SPY_COMMAND_ID);
+		installHandler(openSpyCommand, SPY_HANDLER_ID, SPY_HANDLER_URI);
+		installBinding("org.eclipse.ui.contexts.dialogAndWindow",
+				openSpyCommand, "M2+M3+F4");
+
+		MCommand openScratchpadCommand = installCommand("Open CSS Scratchpad",
+				OPEN_SCRATCHPAD_COMMAND_ID);
+		installHandler(openScratchpadCommand, SCRATCHPAD_HANDLER_ID, SCRATCHPAD_HANDLER_URI);
+		installBinding("org.eclipse.ui.contexts.dialogAndWindow",
+				openScratchpadCommand, "M1+M2+M3+F4");
 	}
 
-	private MCommand installSpyCommand() {
+	private MCommand installCommand(String label, String commandId) {
 		for(MCommand cmd : app.getCommands()) {
-			if(OPEN_SPY_COMMAND_ID.equals(cmd.getElementId())) {
-				System.err.println("CSS Spy command already setup");
+			if (commandId.equals(cmd.getElementId())) {
+				System.err.println(cmd.getElementId()
+						+ ": command already installed");
 				return cmd;
 			}
 		}
 
 		MCommand cmd = MCommandsFactory.INSTANCE.createCommand();
-		cmd.setCommandName("Open CSS Spy");
-		cmd.setElementId(OPEN_SPY_COMMAND_ID);
+		cmd.setCommandName(label);
+		cmd.setElementId(commandId);
 		app.getCommands().add(cmd);
 		return cmd;
 	}
 
-	private MHandler installSpyHandler(MCommand cmd) {
+	private MHandler installHandler(MCommand cmd, String handlerId,
+			String handlerURI) {
 		for(MHandler hdlr : app.getHandlers()) {
-			if(SPY_HANDLER_ID.equals(hdlr.getElementId())) {
-				System.err.println("CSS Spy handler already setup");
+			if (handlerId.equals(hdlr.getElementId())) {
+				System.err.println(handlerId + ": handler already installed");
 				return hdlr;
 			}
 		}
 
 		MHandler hdlr = MCommandsFactory.INSTANCE.createHandler();
-		hdlr.setElementId(SPY_HANDLER_ID);
-		hdlr.setContributionURI(SPY_HANDLER_URI);
+		hdlr.setElementId(handlerId);
+		hdlr.setContributionURI(handlerURI);
 		hdlr.setCommand(cmd);
 		app.getHandlers().add(hdlr);
 		return hdlr;
 	}
 
-	private void installSpyBinding(String bindingContextId, MCommand cmd,
+	private void installBinding(String bindingContextId, MCommand cmd,
 			String keySeq) {
 		// there is a one-to-one mapping between binding contexts and
 		// binding tables, though binding tables may not necessarily
@@ -76,7 +92,9 @@ public class SpyInstaller {
 		for(MBindingTable table : app.getBindingTables()) {
 			for(MKeyBinding binding : table.getBindings()) {
 				if(binding.getCommand() == cmd) {
-					System.err.println("Spy binding already installed");
+					System.err.println(cmd.getElementId()
+							+ ": binding already installed as "
+							+ binding.getKeySequence());
 					return;
 				}
 			}
