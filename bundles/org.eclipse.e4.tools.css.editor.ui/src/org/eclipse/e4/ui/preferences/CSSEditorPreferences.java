@@ -180,7 +180,6 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 			if (ss.size() > 0) {
 				// For now just get the first element
 				String path = ss.get(0);
-				((ThemeEngine) engine).getCSSEngine().getResourcesLocatorManager();
 				try {
 					styleSheetURL = FileLocator.toFileURL(new URL(path));
 				} catch (MalformedURLException e) {
@@ -227,7 +226,6 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 		
 			// For now just get the first element
 			String path = mod.get(0);
-			((ThemeEngine) engine).getCSSEngine().getResourcesLocatorManager();
 			try {
 				
 				URL styleSheetURL = FileLocator.toFileURL(new URL(path));

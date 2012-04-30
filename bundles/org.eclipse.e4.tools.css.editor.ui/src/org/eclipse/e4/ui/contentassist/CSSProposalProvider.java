@@ -13,14 +13,12 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.RegistryFactory;
 import org.eclipse.e4.cSS.selector;
 import org.eclipse.e4.cSS.impl.RulesImpl;
-import org.eclipse.e4.ui.css.core.engine.CSSEngine;
-import org.eclipse.e4.ui.css.swt.internal.theme.ThemeEngine;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.xtext.RuleCall;
 import org.eclipse.xtext.ui.editor.contentassist.ContentAssistContext;
 import org.eclipse.xtext.ui.editor.contentassist.ICompletionProposalAcceptor;
+
 /**
  * see http://www.eclipse.org/Xtext/documentation/latest/xtext.html#contentAssist on how to customize content assistant
  */
@@ -28,12 +26,11 @@ public class CSSProposalProvider extends AbstractCSSProposalProvider {
 	
 	String[] completions;
 	boolean init = false;
-	CSSEngine engine;
 	
 	void init() {
 		IExtensionRegistry registry = RegistryFactory.getRegistry();
 		IExtensionPoint extPoint = registry
-				.getExtensionPoint("org.eclipse.e4.ui.css.swt.property.handler");
+				.getExtensionPoint("org.eclipse.e4.ui.css.core.propertyHandler");
 		ArrayList<IConfigurationElement> matchingElements = new ArrayList<IConfigurationElement>();
 		ArrayList<IConfigurationElement> controlAdapters = new ArrayList<IConfigurationElement>();
 		for (IExtension e : extPoint.getExtensions()) {
@@ -56,29 +53,7 @@ public class CSSProposalProvider extends AbstractCSSProposalProvider {
 			counter++;
 		}
 		
-		Object themeEngine = Display.getCurrent().getData("org.eclipse.e4.ui.css.swt.theme");
-		if (themeEngine instanceof ThemeEngine) {
-			engine = ((ThemeEngine) themeEngine).getCSSEngine();
-		}
-//		Shell[] shells = Display.getCurrent().getShells();
-//		if (shells.length > 0) {
-//			//This is from AbstractPartRenderer, should be in IPresentationEngine
-//			String OWNING_ME = "modelElement"; //$NON-NLS-1$
-//			Object obj = null;
-//			for (int i = 0; i < shells.length; i++) {
-//				obj = shells[i].getData(OWNING_ME);
-//				if (obj != null) break;
-//			}
-//			if (obj != null && obj instanceof MTrimmedWindow) {
-//				MTrimmedWindow context = (MTrimmedWindow) obj;
-//				IStylingEngine stylingengine = (IStylingEngine) context.getContext().get(IStylingEngine.SERVICE_NAME);
-//				engine = (CSSEngine) stylingengine.getEngine();
-//			}
-//		}
-//		IEclipseContext context = application.getContext();
-//		IStylingEngine engine = (IStylingEngine) context
-//				.get(IStylingEngine.SERVICE_NAME);
-//		
+		// engine = WidgetElement.getEngine(Display.getCurrent());
 		init = true;
 //		for (IExtension e : extPoint.getExtensions()) {
 //			for (IConfigurationElement ce : getPlatformMatches(e
