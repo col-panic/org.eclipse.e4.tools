@@ -163,6 +163,11 @@ public class CssSpyDialog extends Dialog {
 		setShellStyle(SWT.DIALOG_TRIM | SWT.RESIZE/* | SWT.PRIMARY_MODAL */);
 	}
 
+	protected void configureShell(Shell newShell) {
+		super.configureShell(newShell);
+		newShell.setText("CSS Spy");
+	}
+
 	public Widget getSpecimen() {
 		return specimen;
 	}
@@ -821,8 +826,8 @@ public class CssSpyDialog extends Dialog {
 	protected void createButtonsForButtonBar(Composite parent) {
 		createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
 				true);
-		createButton(parent, IDialogConstants.CANCEL_ID,
-				IDialogConstants.CANCEL_LABEL, false);
+		// createButton(parent, IDialogConstants.CANCEL_ID,
+		// IDialogConstants.CANCEL_LABEL, false);
 	}
 
 	/**
