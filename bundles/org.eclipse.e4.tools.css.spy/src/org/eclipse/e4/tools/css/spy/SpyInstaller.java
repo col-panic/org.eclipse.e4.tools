@@ -37,6 +37,9 @@ public class SpyInstaller {
 
 	@Execute
 	public void execute() {
+		// rectify situation introduced by bug 376475
+		removeBindingTable("bt.org.eclipse.e4.css.OpenSpy");
+
 		MCommand openSpyCommand = installCommand("Open CSS Spy",
 				OPEN_SPY_COMMAND_ID);
 		installHandler(openSpyCommand, SPY_HANDLER_ID, SPY_HANDLER_URI);
@@ -48,6 +51,15 @@ public class SpyInstaller {
 		installHandler(openScratchpadCommand, SCRATCHPAD_HANDLER_ID, SCRATCHPAD_HANDLER_URI);
 		installBinding("org.eclipse.ui.contexts.dialogAndWindow",
 				openScratchpadCommand, "M1+M2+M3+F4");
+	}
+
+	private void removeBindingTable(String tableId) {
+		for (MBindingTable table : app.getBindingTables()) {
+			if (tableId.equals(table.getElementId())) {
+				app.getBindingTables().remove(table);
+				return;
+			}
+		}
 	}
 
 	private MCommand installCommand(String label, String commandId) {
