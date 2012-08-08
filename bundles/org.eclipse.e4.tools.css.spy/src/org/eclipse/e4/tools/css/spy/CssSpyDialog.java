@@ -160,7 +160,7 @@ public class CssSpyDialog extends Dialog {
 	public CssSpyDialog(Shell parentShell) {
 		super(parentShell);
 		display = parentShell.getDisplay();
-		setShellStyle(SWT.DIALOG_TRIM | SWT.RESIZE/* | SWT.PRIMARY_MODAL */);
+		setShellStyle(SWT.DIALOG_TRIM | SWT.RESIZE | SWT.MAX);
 	}
 
 	protected void configureShell(Shell newShell) {
