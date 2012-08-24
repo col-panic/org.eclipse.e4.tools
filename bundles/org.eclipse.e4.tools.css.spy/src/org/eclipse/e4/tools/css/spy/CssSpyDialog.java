@@ -286,7 +286,7 @@ public class CssSpyDialog extends Dialog {
 			}
 		}
 		if (element.getStaticPseudoInstances().length > 0) {
-			sb.append("\nStatic Pseudoinstances:\n  ");
+			sb.append("\n\nStatic Pseudoinstances:\n  ");
 			Activator.join(sb, element.getStaticPseudoInstances(), "\n  ");
 		}
 
