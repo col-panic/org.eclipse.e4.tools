@@ -77,7 +77,7 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 		// Render it
 		Composite composite3 = new Composite(parent, SWT.BORDER);
 		composite3.setLayout(new FillLayout());
-		GridData data = new GridData(SWT.CENTER, SWT.CENTER, true, true, 2, 2);
+		GridData data = new GridData(SWT.FILL, SWT.FILL, true, true, 2, 2);
 		data.widthHint = 500;
 		data.heightHint = 500;
 		composite3.setLayoutData(data);
