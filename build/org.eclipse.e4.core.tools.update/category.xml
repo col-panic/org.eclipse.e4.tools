@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <feature url="features/org.eclipse.e4.core.tools.feature_0.12.0.qualifier.jar" id="org.eclipse.e4.core.tools.feature" version="0.12.0.qualifier">
+      <category name="org.eclipse.e4.core.tools"/>
+   </feature>
+   <category-def name="org.eclipse.e4.core.tools" label="Eclipse 4 core tools"/>
+</site>
