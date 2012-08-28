@@ -21,20 +21,6 @@
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-   <modules>
-    <module>../../bundles/org.eclipse.e4.tools</module>
-    <module>../../bundles/org.eclipse.e4.tools.services</module>
-    <module>../../bundles/org.eclipse.e4.tools.compat</module>
-    <module>../../bundles/org.eclipse.e4.tools.emf.editor</module>
-    <module>../../bundles/org.eclipse.e4.tools.emf.liveeditor</module>
-    <module>../../bundles/org.eclipse.e4.tools.emf.editor3x</module>
-    <module>../../bundles/org.eclipse.e4.tools.emf.ui</module> 
-    <module>../../bundles/org.eclipse.e4.tools.emf.ui.script.js</module> 
-    <module>../../features/org.eclipse.e4.core.tools.feature</module>
-    <module>../org.eclipse.e4.core.tools.update/</module>
-  </modules>
-
-
   <properties>
     <tycho.version>0.16.0-SNAPSHOT</tycho.version>
     <tycho-extras.version>0.16.0-SNAPSHOT</tycho-extras.version>
