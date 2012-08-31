@@ -17,7 +17,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.eclipse.e4.tools</groupId>
-  <artifactId>platform-aggregator</artifactId>
+  <artifactId>e4-tools-aggregator</artifactId>
   <version>1.0.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -30,8 +30,15 @@
     <module>./bundles/org.eclipse.e4.tools.emf.liveeditor</module>
     <module>./bundles/org.eclipse.e4.tools.emf.editor3x</module>
     <module>./bundles/org.eclipse.e4.tools.emf.ui</module> 
-    <module>./bundles/org.eclipse.e4.tools.emf.ui.script.js</module> 
+    <module>./bundles/org.eclipse.e4.tools.emf.ui.script.js</module>
+    <module>./bundles/org.eclipse.e4.tools.jdt.templates</module>  
+    <module>./bundles/org.eclipse.e4.tools.css.editor.ui</module>
+    <module>./bundles/org.eclipse.e4.tools.css.editor</module>
+    <module>./bundles/org.eclipse.e4.tools.css.spy</module>
     <module>./features/org.eclipse.e4.core.tools.feature</module>
+    <module>./features/org.eclipse.e4.tools.css.editor.feature</module>
+    <module>./features/org.eclipse.e4.tools.css.spy.feature</module>
+    <module>./features/org.eclipse.e4.tools.e3x.bridge.feature</module>
     <module>./build/org.eclipse.e4.core.tools.update/</module>
   </modules>
 </project>
