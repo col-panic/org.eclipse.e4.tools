@@ -535,14 +535,13 @@ public class CssSpyDialog extends Dialog {
 		lblCssRules.setText("CSS Rules");
 
 		// // THE CSS PROPERTIES TABLE
-		Composite propsComposite = new Composite(container, SWT.BORDER
-				| SWT.H_SCROLL | SWT.V_SCROLL);
+		Composite propsComposite = new Composite(container, SWT.BORDER);
 		GridData gridData = new GridData(SWT.FILL, SWT.FILL, true, true, 1, 1);
 		gridData.minimumHeight = 50;
 		propsComposite.setLayoutData(gridData);
 
 		cssPropertiesViewer = new TableViewer(propsComposite, SWT.BORDER
-				| SWT.V_SCROLL | SWT.FULL_SELECTION);
+				| SWT.H_SCROLL | SWT.V_SCROLL | SWT.FULL_SELECTION);
 		cssPropertiesViewer
 				.setContentProvider(new CSSPropertiesContentProvider());
 		cssPropertiesViewer.getTable().setLinesVisible(true);
