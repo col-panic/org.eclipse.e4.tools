@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2011 Manumitting Technologies, Inc.
+ * Copyright (c) 2011,2012 Manumitting Technologies, Inc.
  * All rights reserved. This program and the accompanying materials
  * are made available under the terms of the Eclipse Public License v1.0
  * which accompanies this distribution, and is available at
@@ -21,16 +21,21 @@ import org.eclipse.e4.ui.model.application.commands.MHandler;
 import org.eclipse.e4.ui.model.application.commands.MKeyBinding;
 
 public class SpyInstaller {
+	private static final String BUNDLE_ID = "org.eclipse.e4.tools.css.spy";
 	public static final String OPEN_SPY_COMMAND_ID = "org.eclipse.e4.css.OpenSpy";
 	private static final String SPY_HANDLER_ID = OpenSpyHandler.class.getName();
-    private static final String SPY_HANDLER_URI = "bundleclass://org.eclipse.e4.tools.css.spy/"
+	private static final String SPY_HANDLER_URI = "bundleclass://" + BUNDLE_ID
+			+ "/"
 			+ OpenSpyHandler.class.getName();
 
 	public static final String OPEN_SCRATCHPAD_COMMAND_ID = "org.eclipse.e4.css.OpenSctachpad";
 	private static final String SCRATCHPAD_HANDLER_ID = OpenScratchpadHandler.class
 			.getName();
-	private static final String SCRATCHPAD_HANDLER_URI = "bundleclass://org.eclipse.e4.tools.css.spy/"
+	private static final String SCRATCHPAD_HANDLER_URI = "bundleclass://"
+			+ BUNDLE_ID + "/"
 			+ OpenScratchpadHandler.class.getName();
+	private static final String CONTRIBUTOR_URI = "platform:/plugin/"
+			+ BUNDLE_ID;
 
 	@Inject
 	protected MApplication app;
@@ -43,14 +48,19 @@ public class SpyInstaller {
 		MCommand openSpyCommand = installCommand("Open CSS Spy",
 				OPEN_SPY_COMMAND_ID);
 		installHandler(openSpyCommand, SPY_HANDLER_ID, SPY_HANDLER_URI);
+
+		// M1 = Control or Cmd on MacOS X
+		// M2 = Shift
+		// M3 = Alt
+		// M4 = Control on MacOS X, Command on others
 		installBinding("org.eclipse.ui.contexts.dialogAndWindow",
-				openSpyCommand, "M2+M3+F4");
+				openSpyCommand, "M2+M3+F5"); // Alt-Shift-F5
 
 		MCommand openScratchpadCommand = installCommand("Open CSS Scratchpad",
 				OPEN_SCRATCHPAD_COMMAND_ID);
 		installHandler(openScratchpadCommand, SCRATCHPAD_HANDLER_ID, SCRATCHPAD_HANDLER_URI);
 		installBinding("org.eclipse.ui.contexts.dialogAndWindow",
-				openScratchpadCommand, "M1+M2+M3+F4");
+				openScratchpadCommand, "M2+M3+F6"); // Alt-Shift-F5
 	}
 
 	private void removeBindingTable(String tableId) {
@@ -65,8 +75,6 @@ public class SpyInstaller {
 	private MCommand installCommand(String label, String commandId) {
 		for(MCommand cmd : app.getCommands()) {
 			if (commandId.equals(cmd.getElementId())) {
-				System.err.println(cmd.getElementId()
-						+ ": command already installed");
 				return cmd;
 			}
 		}
@@ -74,6 +82,7 @@ public class SpyInstaller {
 		MCommand cmd = MCommandsFactory.INSTANCE.createCommand();
 		cmd.setCommandName(label);
 		cmd.setElementId(commandId);
+		cmd.setContributorURI(CONTRIBUTOR_URI);
 		app.getCommands().add(cmd);
 		return cmd;
 	}
@@ -82,7 +91,6 @@ public class SpyInstaller {
 			String handlerURI) {
 		for(MHandler hdlr : app.getHandlers()) {
 			if (handlerId.equals(hdlr.getElementId())) {
-				System.err.println(handlerId + ": handler already installed");
 				return hdlr;
 			}
 		}
@@ -91,6 +99,7 @@ public class SpyInstaller {
 		hdlr.setElementId(handlerId);
 		hdlr.setContributionURI(handlerURI);
 		hdlr.setCommand(cmd);
+		hdlr.setContributorURI(CONTRIBUTOR_URI);
 		app.getHandlers().add(hdlr);
 		return hdlr;
 	}
@@ -104,9 +113,6 @@ public class SpyInstaller {
 		for(MBindingTable table : app.getBindingTables()) {
 			for(MKeyBinding binding : table.getBindings()) {
 				if(binding.getCommand() == cmd) {
-					System.err.println(cmd.getElementId()
-							+ ": binding already installed as "
-							+ binding.getKeySequence());
 					return;
 				}
 			}
@@ -127,6 +133,7 @@ public class SpyInstaller {
 		binding.setCommand(cmd);
 		binding.setKeySequence(keySeq);
 		binding.setElementId("kb." + cmd.getElementId());
+		binding.setContributorURI(CONTRIBUTOR_URI);
 		bindingTable.getBindings().add(binding);
 	}
 
