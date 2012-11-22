@@ -362,9 +362,9 @@ public class CssSpyDialog extends Dialog {
 			// bounds = slectedShell.getDisplay().map(null, selectedShell,
 			// bounds);
 		}
-		Shell highlight = new Shell(selectedShell, SWT.NO_TRIM | SWT.MODELESS); // appears
-																				// on
-																				// top
+		// create the highlight; want it to appear on top
+		Shell highlight = new Shell(selectedShell, SWT.NO_TRIM | SWT.MODELESS
+				| SWT.NO_FOCUS | SWT.ON_TOP);
 		highlight.setBackground(display.getSystemColor(SWT.COLOR_RED));
 		Region highlightRegion = new Region();
 		highlightRegion.add(0, 0, 1, bounds.height + 2);
