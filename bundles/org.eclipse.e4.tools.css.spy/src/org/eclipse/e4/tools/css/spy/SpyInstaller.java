@@ -13,6 +13,9 @@ package org.eclipse.e4.tools.css.spy;
 import javax.inject.Inject;
 
 import org.eclipse.e4.core.di.annotations.Execute;
+import org.eclipse.e4.core.di.annotations.Optional;
+import org.eclipse.e4.core.services.log.Logger;
+import org.eclipse.e4.ui.bindings.EBindingService;
 import org.eclipse.e4.ui.model.application.MApplication;
 import org.eclipse.e4.ui.model.application.commands.MBindingTable;
 import org.eclipse.e4.ui.model.application.commands.MCommand;
@@ -39,6 +42,10 @@ public class SpyInstaller {
 
 	@Inject
 	protected MApplication app;
+	
+	@Inject
+	@Optional
+	protected Logger logger;
 
 	@Execute
 	public void execute() {
@@ -54,13 +61,13 @@ public class SpyInstaller {
 		// M3 = Alt
 		// M4 = Control on MacOS X, Command on others
 		installBinding("org.eclipse.ui.contexts.dialogAndWindow",
-				openSpyCommand, "M2+M3+F5"); // Alt-Shift-F5
+				openSpyCommand, "M2+M3+F5");
 
 		MCommand openScratchpadCommand = installCommand("Open CSS Scratchpad",
 				OPEN_SCRATCHPAD_COMMAND_ID);
 		installHandler(openScratchpadCommand, SCRATCHPAD_HANDLER_ID, SCRATCHPAD_HANDLER_URI);
 		installBinding("org.eclipse.ui.contexts.dialogAndWindow",
-				openScratchpadCommand, "M2+M3+F6"); // Alt-Shift-F5
+				openScratchpadCommand, "M2+M3+F6");
 	}
 
 	private void removeBindingTable(String tableId) {
@@ -111,9 +118,25 @@ public class SpyInstaller {
 		// guaranteed an element id.
 		MBindingTable bindingTable = null;
 		for(MBindingTable table : app.getBindingTables()) {
-			for(MKeyBinding binding : table.getBindings()) {
-				if(binding.getCommand() == cmd) {
-					return;
+			// check if the binding was a user-defined binding, otherwise remove
+			for (MKeyBinding binding : table.getBindings()) {
+				if (binding.getCommand() == cmd) {
+					// if explicitly set or unbound by the user...
+					if (binding.getTags().contains(
+							EBindingService.TYPE_ATTR_TAG + ":user")) {
+						logInfo("Found user-remapped binding for {0} to {1}: not rebinding",
+								cmd.getElementId(), binding.getKeySequence());
+						return;
+					} else if (binding.getTags().contains(
+									EBindingService.DELETED_BINDING_TAG)) {
+						logInfo("User deleted binding for {0}: not rebinding",
+								cmd.getElementId());
+						return;
+					}
+					logInfo("Removing existing binding for {0} to {1}",
+							cmd.getElementId(), binding.getKeySequence());
+					table.getBindings().remove(binding);
+					break;
 				}
 			}
 			if (table.getBindingContext() != null
@@ -124,8 +147,8 @@ public class SpyInstaller {
 		}
 
 		if(bindingTable == null) {
-			System.err.println("Cannot find table for binding context: "
-					+ bindingContextId);
+			logError("Cannot find table for binding context: {0}",
+					bindingContextId);
 			return;
 		}
 
@@ -135,6 +158,20 @@ public class SpyInstaller {
 		binding.setElementId("kb." + cmd.getElementId());
 		binding.setContributorURI(CONTRIBUTOR_URI);
 		bindingTable.getBindings().add(binding);
+	}
+
+	private void logInfo(String message, Object... args) {
+		if (logger == null) {
+			return;
+		}
+		logger.info(message, args);
+	}
+
+	private void logError(String message, Object... args) {
+		if (logger == null) {
+			return;
+		}
+		logger.error(message, args);
 	}
 
 }
