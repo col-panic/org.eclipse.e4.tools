@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: %pluginName
 Bundle-SymbolicName: org.eclipse.e4.tools.emf.ui;singleton:=true
-Bundle-Version: 0.12.0.qualifier
+Bundle-Version: 0.12.1.qualifier
 Bundle-ClassPath: .
 Bundle-Vendor: %providerName
 Bundle-Localization: plugin
@@ -45,3 +45,4 @@ Export-Package: org.eclipse.e4.tools.emf.ui.common,
  org.eclipse.e4.tools.emf.ui.internal.common.component.dialogs;x-internal:=true,
  org.eclipse.e4.tools.emf.ui.internal.wbm;x-friends:="org.eclipse.e4.tools.emf.editor"
 Service-Component: OSGI-INF/contributioncollector.xml, OSGI-INF/resourceprovider.xml
+Bundle-Activator: org.eclipse.e4.tools.emf.ui.internal.ToolsEmfUiPlugin
