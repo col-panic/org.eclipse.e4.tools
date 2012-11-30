@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Tom Schindl <tom.schindl@bestsolution.at> - initial API and implementation
+ *     Marco Descher <marco@descher.at> - Bug395283
  ******************************************************************************/
 package org.eclipse.e4.tools.emf.ui.internal.common.component.dialogs;
 
@@ -15,6 +16,7 @@ import java.util.List;
 import org.eclipse.e4.tools.emf.ui.common.IModelResource;
 import org.eclipse.e4.tools.emf.ui.internal.Messages;
 import org.eclipse.e4.tools.emf.ui.internal.PatternFilter;
+import org.eclipse.e4.tools.emf.ui.internal.ToolsEmfUiPlugin;
 import org.eclipse.e4.tools.emf.ui.internal.common.component.ControlFactory;
 import org.eclipse.e4.ui.model.application.commands.MCommand;
 import org.eclipse.e4.ui.model.application.commands.impl.CommandsPackageImpl;
@@ -23,6 +25,7 @@ import org.eclipse.emf.common.util.TreeIterator;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.eclipse.emf.edit.domain.EditingDomain;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.ArrayContentProvider;
@@ -184,5 +187,10 @@ public abstract class AbstractCommandSelectionDialog extends TitleAreaDialog {
 
 			return s;
 		}
+	}
+
+	@Override
+	protected IDialogSettings getDialogBoundsSettings() {
+		return ToolsEmfUiPlugin.getDefault().getDialogSettings();
 	}
 }

@@ -8,6 +8,7 @@
  * Contributors:
  *     Tom Schindl <tom.schindl@bestsolution.at> - initial API and implementation
  *	   Lars Vogel <lars.vogel@gmail.com> - Enhancements
+ *	   Marco Descher <marco@descher.at> - Bug395283
  ******************************************************************************/
 package org.eclipse.e4.tools.emf.ui.internal.common.component.dialogs;
 
@@ -18,6 +19,7 @@ import org.eclipse.e4.tools.emf.ui.common.IClassContributionProvider.Contributio
 import org.eclipse.e4.tools.emf.ui.common.IClassContributionProvider.ContributionResultHandler;
 import org.eclipse.e4.tools.emf.ui.common.IClassContributionProvider.Filter;
 import org.eclipse.e4.tools.emf.ui.internal.Messages;
+import org.eclipse.e4.tools.emf.ui.internal.ToolsEmfUiPlugin;
 import org.eclipse.e4.tools.emf.ui.internal.common.ClassContributionCollector;
 import org.eclipse.e4.ui.model.application.MApplicationElement;
 import org.eclipse.emf.common.command.Command;
@@ -25,6 +27,7 @@ import org.eclipse.emf.ecore.EStructuralFeature;
 import org.eclipse.emf.edit.command.SetCommand;
 import org.eclipse.emf.edit.domain.EditingDomain;
 import org.eclipse.jface.databinding.viewers.ObservableListContentProvider;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -223,5 +226,10 @@ public class ContributionClassDialog extends TitleAreaDialog {
 			}
 		}
 
+	}
+
+	@Override
+	protected IDialogSettings getDialogBoundsSettings() {
+		return ToolsEmfUiPlugin.getDefault().getDialogSettings();
 	}
 }
