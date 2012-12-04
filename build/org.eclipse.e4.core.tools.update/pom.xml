@@ -13,5 +13,4 @@
   <version>0.13.0.qualifier</version>
   <packaging>eclipse-repository</packaging>
 
-  <name>org.eclipse.e4.tools.updatesite Build</name>
 </project> 
