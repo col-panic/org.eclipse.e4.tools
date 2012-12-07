@@ -97,6 +97,12 @@ public class Messages {
 	public String HandledMenuItemEditor_Tag;
 	public String HandledMenuItemEditor_Value;
 
+	public String DynamicMenuContributionEditor_Label;
+	public String DynamicMenuContributionEditor_Description;
+
+	public String DynamicMenuContributionEditor_ClassURI;
+	public String DynamicMenuContributionEditor_LabelLabel;
+
 	public String HandledToolItemEditor_Command;
 	public String HandledToolItemEditor_Parameters;
 	public String HandledToolItemEditor_ParametersName;
@@ -140,6 +146,7 @@ public class Messages {
 	public String MenuEditor_AddMenu;
 	public String MenuEditor_AddDirectMenuItem;
 	public String MenuEditor_AddSeparator;
+	public String MenuEditor_AddDynamicMenuContribution;
 	public String MenuEditor_AddCoreExpression;
 
 	public String MenuItemEditor_Type;
@@ -622,4 +629,5 @@ public class Messages {
 	public String VWindowSharedElementsEditor_Area;
 	public String ModelEditor_ExtractFragment;
 	public String ModelEditor_ExtractFragment_NoParentId;
+
 }

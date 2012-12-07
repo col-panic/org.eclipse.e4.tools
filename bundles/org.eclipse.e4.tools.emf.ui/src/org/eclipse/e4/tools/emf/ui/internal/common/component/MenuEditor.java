@@ -150,6 +150,12 @@ public class MenuEditor extends AbstractComponentEditor {
 				handleAdd(MenuPackageImpl.Literals.MENU_SEPARATOR, true);
 			}
 		});
+		actions.add(new Action(Messages.MenuEditor_AddDynamicMenuContribution, createImageDescriptor(ResourceProvider.IMG_MenuContribution)) {
+			@Override
+			public void run() {
+				handleAdd(MenuPackageImpl.Literals.DYNAMIC_MENU_CONTRIBUTION, false);
+			}
+		});
 		addExpression = new Action(Messages.MenuEditor_AddCoreExpression, createImageDescriptor(ResourceProvider.IMG_CoreExpression)) {
 			@Override
 			public void run() {
