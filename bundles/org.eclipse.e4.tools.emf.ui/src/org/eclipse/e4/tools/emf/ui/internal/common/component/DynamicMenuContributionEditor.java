@@ -82,9 +82,9 @@ public class DynamicMenuContributionEditor extends AbstractComponentEditor {
 	public Image getImage(Object element, Display display) {
 		if (element instanceof MUIElement) {
 			if (((MUIElement) element).isToBeRendered()) {
-				return createImage(ResourceProvider.IMG_MenuContribution);
+				return createImage(ResourceProvider.IMG_DynamicMenuContribution);
 			} else {
-				return createImage(ResourceProvider.IMG_Tbr_MenuContribution);
+				return createImage(ResourceProvider.IMG_Tbr_DynamicMenuContribution);
 			}
 		}
 
