@@ -281,7 +281,7 @@ public class CssSpyDialog extends Dialog {
 				if (decl != null) {
 					sb.append(decl.getCssText());
 				}
-			} catch (Throwable e) {
+			} catch (Exception e) {
 				sb.append(e);
 			}
 		}
@@ -358,10 +358,6 @@ public class CssSpyDialog extends Dialog {
 		}
 		// emulate a transparent background as per SWT Snippet180
 		Shell selectedShell = getShell(selected);
-		if (selectedShell != null) {
-			// bounds = slectedShell.getDisplay().map(null, selectedShell,
-			// bounds);
-		}
 		// create the highlight; want it to appear on top
 		Shell highlight = new Shell(selectedShell, SWT.NO_TRIM | SWT.MODELESS
 				| SWT.NO_FOCUS | SWT.ON_TOP);
@@ -621,7 +617,7 @@ public class CssSpyDialog extends Dialog {
 					}
 					CSSPropertyProvider provider = (CSSPropertyProvider) element;
 					provider.setValue((String) value);
-				} catch (Throwable e) {
+				} catch (Exception e) {
 					MessageDialog.openError(getShell(), "Error",
 							"Unable to set property:\n\n"
 									+ e.getMessage());

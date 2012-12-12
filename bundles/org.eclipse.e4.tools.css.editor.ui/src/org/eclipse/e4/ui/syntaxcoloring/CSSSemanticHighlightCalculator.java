@@ -36,10 +36,6 @@ public class CSSSemanticHighlightCalculator implements
 						} else if (((RuleCallImpl) eoj).getRule().getName().equals("css_hash_class")) {
 //							node.getGrammarElement()
 							acceptor.addPosition(node.getOffset(), node.getLength(), CSSHighlightingConfiguration.CSS_ClassID);
-						} else if (((RuleCallImpl) eoj).getRule().getName().equals("ident")) {
-//							node.getGrammarElement()
-//							acceptor.addPosition(node.getOffset(), node.getLength(), CSSHighlightingConfiguration.CSS_Declaration);
-						}
 					}
 				}
 				

@@ -137,9 +137,7 @@ public final class BufferedDocumentScanner implements ICharacterScanner {
 	public final void unread() {
 
 		if (fOffset == 0) {
-			if (fBufferOffset == fRangeOffset) {
-				// error: BOF
-			} else {
+			if (fBufferOffset != fRangeOffset) {
 				updateBuffer(fBufferOffset - fBuffer.length);
 				fOffset= fBuffer.length - 1;
 			}
