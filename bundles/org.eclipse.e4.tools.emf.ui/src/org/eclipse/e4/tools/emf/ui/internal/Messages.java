@@ -573,6 +573,11 @@ public class Messages {
 	public String ExpressionIdDialog_DialogMessage;
 	public String ExpressionIdDialog_Id;
 
+	public String MenuIdDialog_ShellTitle;
+	public String MenuIdDialog_DialogTitle;
+	public String MenuIdDialog_DialogMessage;
+	public String MenuIdDialog_Id;
+
 	public String CommandToStringConverter_None;
 
 	public String VRootBindingContexts_AddContext;
