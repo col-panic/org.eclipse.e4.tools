@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.e4.core.contexts.IEclipseContext;
 import org.eclipse.e4.ui.css.swt.internal.theme.ThemeEngine;
 import org.eclipse.e4.ui.css.swt.theme.ITheme;
@@ -27,6 +29,7 @@ import org.eclipse.e4.ui.model.application.ui.basic.MWindow;
 import org.eclipse.e4.ui.workbench.modeling.EModelService;
 import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.text.IDocument;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
@@ -110,22 +113,22 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 		if (cssEditor.isDirty()) {
 			// make a copy of file
 			IDocumentProvider docProvider = cssEditor.getDocumentProvider();
-			
 			IEditorInput editorInput = cssEditor.getEditorInput();
 			IDocument doc = docProvider.getDocument(editorInput);
 			String more = doc.get();
 			//check for .e4css folder
-			String e4CSSPath = System.getProperty("user.home") + System.getProperty("file.separator") + ".e4css";
-			File e4CSS = new File(e4CSSPath);
-			if (!e4CSS.exists()) {
-				File userHome = e4CSS.getParentFile( );
-				if ( userHome.exists() && userHome.canWrite() )
-				{
-					e4CSS.mkdir();
+			Location configLocation = Platform.getConfigurationLocation(); 
+			String e4CSSPath = null;
+			try {
+				URL locationURL = new URL(configLocation.getDataArea(ThemeEngine.THEME_PLUGIN_ID).toString());
+				File locationFile = new File(locationURL.getFile());
+				e4CSSPath = locationFile.getPath();
+				if (!locationFile.exists()) {
+					locationFile.mkdirs();
 				}
-			}
+			} catch (IOException e1) {
+			}			
 			IPath path = new Path(e4CSSPath + System.getProperty("file.separator") + editorInput.getName()); //$NON-NLS-1$
-			
 			byte[] bytes = more.getBytes();
 			FileOutputStream outputStream = null;
 			try {
@@ -140,11 +143,10 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 					} catch (IOException e) {
 					} 
 			}
-
 			if (engine instanceof ThemeEngine) {
 				ArrayList<String> styleSheets = new ArrayList<String>();
 				try {
-					URL styleSheetURL = FileLocator.toFileURL(path.toFile().toURI().toURL());
+					URL styleSheetURL = path.toFile().toURI().toURL();
 					styleSheets.add(styleSheetURL.toString());
 					((ThemeEngine) engine).themeModified(selection, styleSheets );
 				} catch (MalformedURLException e) {
@@ -171,20 +173,25 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 				.getProject(".e4css"); //$NON-NLS-1$
 		URL styleSheetURL = null;
 
+		File modFile = null;
 		if (engine instanceof ThemeEngine) {
 			List<String> ss = ((ThemeEngine) engine).getStylesheets(selection);
 			List<String> mod = ((ThemeEngine) engine).getModifiedStylesheets(selection);
 			if (mod.size() > 0) {
 				ss = mod;
 			}
+			
 			if (ss.size() > 0) {
 				// For now just get the first element
 				String path = ss.get(0);
 				try {
 					styleSheetURL = FileLocator.toFileURL(new URL(path));
+					modFile = new File (styleSheetURL.toURI());
 				} catch (MalformedURLException e) {
 					e.printStackTrace();
 				} catch (IOException e) {
+					e.printStackTrace();
+				} catch (URISyntaxException e) {
 					e.printStackTrace();
 				}
 			}
@@ -201,8 +208,7 @@ public class CSSEditorPreferences extends PreferencePageEnhancer {
 			}
 			newProject.setHidden(true);
 			// currentTheme.
-			IPath location = new Path(styleSheetURL.getPath());
-			// IPath location = new Path(styleSheetURL.getPath());
+			IPath location = new Path(modFile.getPath());
 			file = newProject.getFile(location.lastSegment());
 			file.delete(true, null);
 			if (!file.exists())
