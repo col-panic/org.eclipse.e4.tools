@@ -10,15 +10,12 @@
      Igor Fedorenko - initial implementation
      Lars Vogel - Adjustments for e4 tools 
 -->
-
-<project
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-  xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>org.eclipse.e4.tools</groupId>
   <artifactId>e4-tools-aggregator</artifactId>
-  <version>1.0.0-SNAPSHOT</version>
+  <version>0.14.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
    <modules>
