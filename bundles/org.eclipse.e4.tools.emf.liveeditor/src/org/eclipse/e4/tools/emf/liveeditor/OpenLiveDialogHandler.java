@@ -50,7 +50,7 @@ public class OpenLiveDialogHandler {
 				MemoryModelResource resource = new MemoryModelResource(application);
 				childContext.set(IModelResource.class, resource);
 				childContext.set(Composite.class.getName(), shell);
-				
+				childContext.set(Shell.class.getName(), shell);
 				ContextInjectionFactory.make(ApplicationModelEditor.class, childContext);
 				
 //				new ApplicationModelEditor(shell, childContext, resource, null);
