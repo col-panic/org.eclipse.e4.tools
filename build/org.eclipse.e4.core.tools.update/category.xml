@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/org.eclipse.e4.core.tools.feature_0.12.0.qualifier.jar" id="org.eclipse.e4.core.tools.feature" version="0.12.0.qualifier">
+   <feature url="features/org.eclipse.e4.core.tools.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.core.tools.feature" version="0.14.0.qualifier">
       <category name="org.eclipse.e4.tools.core"/>
    </feature>
-   <feature url="features/org.eclipse.e4.tools.css.editor.feature_0.12.0.qualifier.jar" id="org.eclipse.e4.tools.css.editor.feature" version="0.12.0.qualifier">
+   <feature url="features/org.eclipse.e4.tools.css.editor.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.css.editor.feature" version="0.14.0.qualifier">
       <category name="org.eclipse.e4.tools.css.editor"/>
    </feature>
-   <feature url="features/org.eclipse.e4.tools.css.spy.feature_0.12.0.qualifier.jar" id="org.eclipse.e4.tools.css.spy.feature" version="0.12.0.qualifier">
+   <feature url="features/org.eclipse.e4.tools.css.spy.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.css.spy.feature" version="0.14.0.qualifier">
       <category name="org.eclipse.e4.tools.css.spy"/>
    </feature>
-   <feature url="features/org.eclipse.e4.tools.e3x.bridge.feature_0.12.0.qualifier.jar" id="org.eclipse.e4.tools.e3x.bridge.feature" version="0.12.0.qualifier">
+   <feature url="features/org.eclipse.e4.tools.e3x.bridge.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.e3x.bridge.feature" version="0.14.0.qualifier">
       <category name="org.eclipse.e4.tools.e3x.bridge"/>
    </feature>
    <category-def name="org.eclipse.e4.tools.core" label="Eclipse 4 core tools"/>
