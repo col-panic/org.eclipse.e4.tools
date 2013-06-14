@@ -1,0 +1,17 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="%s"/>
+<script src="%s"></script>
+<script>
+	require(["orion/editor/edit"], function(edit) {
+		window.editor = edit({className: "editor"})[0];
+	});
+</script>
+</head>
+<body>
+<h2>Sample CSS Editor</h2>
+<pre id="regulus" class="editor" data-editor-lang="css">
+%s
+</pre>
+</body>
+</html>
