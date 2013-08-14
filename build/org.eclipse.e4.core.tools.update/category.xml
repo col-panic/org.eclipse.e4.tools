@@ -1,32 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <site>
-   <feature url="features/org.eclipse.e4.core.tools.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.core.tools.feature" version="0.14.0.qualifier">
+   <feature url="features/org.eclipse.e4.core.tools.feature_0.15.0.qualifier.jar" id="org.eclipse.e4.core.tools.feature" version="0.15.0.qualifier">
       <category name="org.eclipse.e4.tools.core"/>
    </feature>
-   <feature url="features/org.eclipse.e4.core.tools.feature.source_0.14.0.qualifier.jar" id="org.eclipse.e4.core.tools.feature.source" version="0.14.0.qualifier">
+   <feature url="features/org.eclipse.e4.core.tools.feature.source_0.15.0.qualifier.jar" id="org.eclipse.e4.core.tools.feature.source" version="0.15.0.qualifier">
    	<category name="org.eclipse.e4.tools.core"/>
    </feature>
-   <feature url="features/org.eclipse.e4.tools.css.editor.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.css.editor.feature" version="0.14.0.qualifier">
+   <feature url="features/org.eclipse.e4.tools.css.editor.feature_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.css.editor.feature" version="0.15.0.qualifier">
       <category name="org.eclipse.e4.tools.css.editor"/>
    </feature>
-   <feature url="features/org.eclipse.e4.tools.css.editor.feature.source_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.css.editor.feature.source" version="0.14.0.qualifier">
+   <feature url="features/org.eclipse.e4.tools.css.editor.feature.source_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.css.editor.feature.source" version="0.15.0.qualifier">
       <category name="org.eclipse.e4.tools.css.editor"/>
    </feature>
-   <feature url="features/org.eclipse.e4.tools.css.spy.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.css.spy.feature" version="0.14.0.qualifier">
+   <feature url="features/org.eclipse.e4.tools.css.spy.feature_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.css.spy.feature" version="0.15.0.qualifier">
       <category name="org.eclipse.e4.tools.css.spy"/>
    </feature>
-    <feature url="features/org.eclipse.e4.tools.css.spy.feature.source_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.css.spy.feature.source" version="0.14.0.qualifier">
+    <feature url="features/org.eclipse.e4.tools.css.spy.feature.source_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.css.spy.feature.source" version="0.15.0.qualifier">
       <category name="org.eclipse.e4.tools.css.spy"/>
    </feature>
-   <feature url="features/org.eclipse.e4.tools.e3x.bridge.feature_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.e3x.bridge.feature" version="0.14.0.qualifier">
+   <feature url="features/org.eclipse.e4.tools.e3x.bridge.feature_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.e3x.bridge.feature" version="0.15.0.qualifier">
       <category name="org.eclipse.e4.tools.e3x.bridge"/>
    </feature>
-    <feature url="features/org.eclipse.e4.tools.e3x.bridge.feature.source_0.14.0.qualifier.jar" id="org.eclipse.e4.tools.e3x.bridge.feature.source" version="0.14.0.qualifier">
+    <feature url="features/org.eclipse.e4.tools.e3x.bridge.feature.source_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.e3x.bridge.feature.source" version="0.15.0.qualifier">
       <category name="org.eclipse.e4.tools.e3x.bridge"/>
+   </feature>
+   <feature url="features/org.eclipse.e4.tools.event.spy.feature_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.event.spy.feature" version="0.15.0.qualifier">
+      <category name="org.eclipse.e4.tools.event.spy"/>
+   </feature>
+   <feature url="features/org.eclipse.e4.tools.event.spy.feature.source_0.15.0.qualifier.jar" id="org.eclipse.e4.tools.event.spy.feature.source" version="0.15.0.qualifier">
+      <category name="org.eclipse.e4.tools.event.spy"/>
    </feature>
 
    <category-def name="org.eclipse.e4.tools.core" label="Eclipse 4 core tools"/>
    <category-def name="org.eclipse.e4.tools.css.spy" label="CSS spy for Eclipse 4"/>
    <category-def name="org.eclipse.e4.tools.e3x.bridge" label="Eclipse 3.x  bridge"/>
    <category-def name="org.eclipse.e4.tools.css.editor" label="CSS file editor"/>
+   <category-def name="org.eclipse.e4.tools.event.spy" label="Eclipse 4 event spy"/>
 </site>
