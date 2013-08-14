@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension
+         id="org.eclipse.e4.tools.event.spy"
+         name="E4 Event spy"
+         point="org.eclipse.e4.workbench.model">
+      <processor
+            beforefragment="false"
+            class="org.eclipse.e4.tools.event.spy.Installer">
+      </processor>
+   </extension>
+
+</plugin>

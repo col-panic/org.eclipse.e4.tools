@@ -50,10 +50,12 @@
     <module>./bundles/org.eclipse.e4.tools.css.editor.ui</module>
     <module>./bundles/org.eclipse.e4.tools.css.editor</module>
     <module>./bundles/org.eclipse.e4.tools.css.spy</module>
+    <module>./bundles/org.eclipse.e4.tools.event.spy</module>
     <module>./features/org.eclipse.e4.core.tools.feature</module>
     <module>./features/org.eclipse.e4.tools.css.editor.feature</module>
     <module>./features/org.eclipse.e4.tools.css.spy.feature</module>
     <module>./features/org.eclipse.e4.tools.e3x.bridge.feature</module>
+    <module>./features/org.eclipse.e4.tools.event.spy.feature</module>
     <module>./build/org.eclipse.e4.core.tools.update/</module>
   </modules>
 </project>
