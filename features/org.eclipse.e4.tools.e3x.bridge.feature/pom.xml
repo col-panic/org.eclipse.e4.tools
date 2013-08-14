@@ -10,7 +10,7 @@
 
   <groupId>org.eclipse.e4</groupId>
   <artifactId>org.eclipse.e4.tools.e3x.bridge.feature</artifactId>
-  <version>0.15.0.qualifier</version>
+  <version>0.14.0.qualifier</version>
   <packaging>eclipse-feature</packaging>
 
 
