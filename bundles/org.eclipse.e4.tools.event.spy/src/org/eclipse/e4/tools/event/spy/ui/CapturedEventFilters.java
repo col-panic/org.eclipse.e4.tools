@@ -39,7 +39,7 @@ import org.eclipse.swt.widgets.ToolTip;
 public class CapturedEventFilters {
 	private final static String NOT_SELECTED_VALUE = "-- expected value --";
 
-	private Composite control;
+	private final Composite control;
 
 	private Text valueText;
 
@@ -111,7 +111,7 @@ public class CapturedEventFilters {
 		valueText.setText(NOT_SELECTED_VALUE);
 		valueText.addFocusListener(new FocusListener() {
 			public void focusLost(FocusEvent e) {
-				if (valueText.getText().trim().isEmpty()) {
+				if (valueText.getText().trim().length() == 0) {
 					valueText.setText(NOT_SELECTED_VALUE);
 				}
 			}
@@ -194,7 +194,7 @@ public class CapturedEventFilters {
 		}
 
 		String value = valueText.getText();
-		if (value.isEmpty() || value.equals(NOT_SELECTED_VALUE)) {
+		if (value.length() == 0 || value.equals(NOT_SELECTED_VALUE)) {
 			getTooltip().setText(String.format("%s is empty", getFieldName(NOT_SELECTED_VALUE)));
 			getTooltip().setVisible(true);
 			return;

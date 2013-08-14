@@ -103,7 +103,7 @@ public class CapturedEventFilterMatcher {
 	}
 
 	private boolean matchesToEmptyString(Object current) {
-		return current != null && current instanceof String && current.toString().isEmpty();
+		return current != null && current instanceof String && current.toString().length() == 0;
 	}
 
 	private boolean matchesToNull(Object current) {

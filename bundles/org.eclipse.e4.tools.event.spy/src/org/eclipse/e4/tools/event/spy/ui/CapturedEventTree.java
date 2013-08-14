@@ -38,11 +38,11 @@ public class CapturedEventTree {
 		void selectionChanged(CapturedEventTreeSelection selection);
 	}
 
-	private Tree tree;
+	private final Tree tree;
 
 	private SelectionListener selectionListener;
 
-	private List<ItemToFilter> columns = new ArrayList<ItemToFilter>();
+	private final List<ItemToFilter> columns = new ArrayList<ItemToFilter>();
 
 
 	/* Layout scheme:
@@ -84,7 +84,7 @@ public class CapturedEventTree {
 			public void treeExpanded(TreeEvent e) {
 				TreeItem item = (TreeItem) e.item;
 				TreeItem paramItem = item.getItem(0);
-				if (paramItem.getText().isEmpty()) {
+				if (paramItem.getText().length() == 0) {
 					for (Parameter param: (List<Parameter>) paramItem.getData()) {
 						if (paramItem == null) {
 							paramItem = new TreeItem(item, SWT.NONE);
@@ -120,7 +120,7 @@ public class CapturedEventTree {
 				}
 				if (selectedItemIndex >= 0 && selectionListener != null) {
 					String selection = items[0].getText(selectedItemIndex);
-					if (!selection.isEmpty()) {
+					if (selection.length() != 0) {
 						selectionListener.selectionChanged(new CapturedEventTreeSelection(selection,items[0].getItemCount() == 0));
 					}
 				}
