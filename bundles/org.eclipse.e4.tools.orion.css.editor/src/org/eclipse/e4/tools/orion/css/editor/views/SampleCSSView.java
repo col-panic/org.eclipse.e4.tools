@@ -68,7 +68,7 @@ public class SampleCSSView extends ViewPart {
 					.getEntry("/web/css.html").openStream();
 			String cssTemplate = loadFile(in, 1024);
 			final String editorCssUrl = FileLocator.toFileURL(bundle.getEntry("/web/built-editor.css")).toExternalForm();
-			final String editorJsUrl = FileLocator.toFileURL(bundle.getEntry("/web/built-editor.min.js")).toExternalForm();
+			final String editorJsUrl = FileLocator.toFileURL(bundle.getEntry("/web/built-editor.js")).toExternalForm();
 			
 			editorHtml = String.format(cssTemplate, editorCssUrl, editorJsUrl, editorContent);
 			System.out.println(editorHtml);
