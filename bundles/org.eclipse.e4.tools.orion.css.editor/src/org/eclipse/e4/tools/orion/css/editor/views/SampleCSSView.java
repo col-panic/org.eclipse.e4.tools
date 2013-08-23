@@ -6,9 +6,16 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.RegistryFactory;
 import org.eclipse.e4.tools.orion.css.editor.Activator;
 import org.eclipse.e4.ui.css.swt.internal.theme.ThemeEngine;
 import org.eclipse.e4.ui.css.swt.theme.ITheme;
@@ -64,33 +71,85 @@ public class SampleCSSView extends ViewPart {
 		try {
 			initContent();
 			final Bundle bundle = Activator.getDefault().getBundle();
-			final InputStream in = bundle
-					.getEntry("/web/css.html").openStream();
-			String cssTemplate = loadFile(in, 1024);
-			final String editorCssUrl = FileLocator.toFileURL(bundle.getEntry("/web/built-editor.css")).toExternalForm();
-			final String editorJsUrl = FileLocator.toFileURL(bundle.getEntry("/web/built-editor.js")).toExternalForm();
-			
-			editorHtml = String.format(cssTemplate, editorCssUrl, editorJsUrl, editorContent);
+			final InputStream contentAssistInput = bundle.getEntry(
+					"/web/swtContentAssist.js").openStream();
+			String contentAssistTemplate = loadFile(contentAssistInput, 1024);
+			String keywords = loadKeywords();
+			String contentAssist = String.format(contentAssistTemplate,
+					keywords);
+			final InputStream cssTemplateInput = bundle.getEntry(
+					"/web/css.html").openStream();
+			String cssTemplate = loadFile(cssTemplateInput, 1024);
+			final String editorCssUrl = FileLocator.toFileURL(
+					bundle.getEntry("/web/built-editor.css")).toExternalForm();
+			final String editorJsUrl = FileLocator.toFileURL(
+					bundle.getEntry("/web/built-editor.js")).toExternalForm();
+
+			editorHtml = String.format(cssTemplate, editorCssUrl, editorJsUrl,
+					contentAssist, editorContent);
 			System.out.println(editorHtml);
 		} catch (IOException e) {
 			throw new PartInitException("Failed to load CSS editor", e);
 		}
 	}
-	
+
+	private String loadKeywords() {
+		StringBuilder buf = new StringBuilder();
+
+		IExtensionRegistry registry = RegistryFactory.getRegistry();
+		IExtensionPoint extPoint = registry
+				.getExtensionPoint("org.eclipse.e4.ui.css.core.propertyHandler");
+		ArrayList<IConfigurationElement> matchingElements = new ArrayList<IConfigurationElement>();
+		ArrayList<IConfigurationElement> controlAdapters = new ArrayList<IConfigurationElement>();
+		for (IExtension e : extPoint.getExtensions()) {
+			IConfigurationElement[] elements = e.getConfigurationElements();
+			for (int i = 0; i < elements.length; i++) {
+				IConfigurationElement element = elements[i];
+				controlAdapters.add(element);
+				IConfigurationElement[] child = element
+						.getChildren("property-name");
+				for (int j = 0; j < child.length; j++) {
+					matchingElements.add(child[j]);
+				}
+			}
+		}
+		Iterator<IConfigurationElement> iter = matchingElements.iterator();
+		boolean once = true;
+		while (iter.hasNext()) {
+			IConfigurationElement type = iter.next();
+			String name = type.getAttribute("name");
+			if (!once) {
+				buf.append(',');
+				buf.append('\n');
+			}
+			buf.append('"');
+			buf.append(name);
+			buf.append('"');
+			once = false;
+		}
+		buf.append('\n');
+		
+		return buf.toString();
+	}
+
 	private void initContent() throws MalformedURLException, IOException {
-		IThemeEngine engine = (IThemeEngine) getSite().getService(IThemeEngine.class);
+		IThemeEngine engine = (IThemeEngine) getSite().getService(
+				IThemeEngine.class);
 		final ITheme theme = engine.getActiveTheme();
-		final List<String> sheets = ((ThemeEngine)engine).getStylesheets(theme);
-		if (sheets.size()>0) {
+		final List<String> sheets = ((ThemeEngine) engine)
+				.getStylesheets(theme);
+		if (sheets.size() > 0) {
 			String path = sheets.get(0);
-			final InputStream in = FileLocator.toFileURL(new URL(sheets.get(0))).openStream();
+			final InputStream in = FileLocator
+					.toFileURL(new URL(sheets.get(0))).openStream();
 			editorContent = loadFile(in, 1024);
 		} else {
 			editorContent = "/*\n * This is an Orion editor sample.\n */\nfunction() {\n    var a = 'hi there!';\n    window.console.log(a);\n}";
 		}
 	}
 
-	public String loadFile(final InputStream in, final int bufferSize) throws IOException {
+	public String loadFile(final InputStream in, final int bufferSize)
+			throws IOException {
 		final char[] buffer = new char[bufferSize];
 		final StringBuilder out = new StringBuilder();
 		final Reader reader = new InputStreamReader(in, "UTF-8");

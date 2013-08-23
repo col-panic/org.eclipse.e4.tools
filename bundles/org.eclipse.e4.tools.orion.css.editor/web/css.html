@@ -1,16 +1,44 @@
 <html>
 <head>
+<title>Theme CSS editor</title>
+<style>
+#editor {
+	border: 1px solid teal;
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	bottom: 0px;
+	right: 0px;
+	margin: 20px;
+}
+
+pre {
+	margin: 0px;
+}
+</style>
 <link rel="stylesheet" type="text/css" href="%s"/>
 <script src="%s"></script>
 <script>
-	require(["orion/editor/edit"], function(edit) {
-		window.editor = edit({className: "editor"})[0];
+%s
+</script>
+<script>
+	/*globals require*/
+	require(["orion/editor/edit", "examples/editor/swtContentAssist"], function(edit, mSWTContentAssist) {
+		var editor = edit({
+			lang: "css"
+		});
+		//ADD THE SWT CONTENT ASSIST
+		var contentAssist = editor.getContentAssist ? editor.getContentAssist() : editor._contentAssist;
+		contentAssist.addEventListener("Activating", function() { //$NON-NLS-0$
+			contentAssist.providers.push(new mSWTContentAssist.SWTContentAssistProvider());
+		});
+		window.editor = editor;
+		//----------------
 	});
 </script>
 </head>
-<body>
-<h2>Sample CSS Editor</h2>
-<pre id="regulus" class="editor" data-editor-lang="css">
+<body spellcheck="false">
+<pre id="editor" class="editor" data-editor-lang="css">
 %s
 </pre>
 </body>
