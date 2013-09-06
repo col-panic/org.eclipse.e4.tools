@@ -3,40 +3,13 @@
 <plugin>
 
    <extension
-         point="org.eclipse.ui.views">
-      <category
-            name="Sample CSS Category"
-            id="org.eclipse.e4.tools.orion.css.editor">
-      </category>
-      <view
-            name="Sample CSS View"
-            icon="icons/sample.gif"
-            category="org.eclipse.e4.tools.orion.css.editor"
-            class="org.eclipse.e4.tools.orion.css.editor.views.SampleCSSView"
-            id="org.eclipse.e4.tools.orion.css.editor.views.SampleCSSView">
-      </view>
-   </extension>
-   <extension
-         point="org.eclipse.ui.commands">
-      <command
-            categoryId="org.eclipse.ui.category.file"
-            defaultHandler="org.eclipse.e4.tools.orion.css.editor.views.GetContentHandler"
-            id="org.eclipse.e4.tools.orion.css.editor.get.content"
-            name="Get Editor Content">
-      </command>
-   </extension>
-   <extension
-         point="org.eclipse.ui.menus">
-      <menuContribution
-            allPopups="false"
-            locationURI="toolbar:org.eclipse.e4.tools.orion.css.editor.views.SampleCSSView">
-         <command
-               commandId="org.eclipse.e4.tools.orion.css.editor.get.content"
-               icon="icons/sample.gif"
-               label="Get Editor content"
-               style="push">
-         </command>
-      </menuContribution>
+         point="org.eclipse.ui.internalTweaklets">
+      <tweaklet
+            definition="org.eclipse.ui.internal.tweaklets.PreferencePageEnhancer"
+            id="org.eclipse.e4.tools.orion.css.editor.tweaklet"
+            implementation="org.eclipse.e4.tools.orion.css.editor.CSSEditorPreferences"
+            name="Orion CSS Editor">
+      </tweaklet>
    </extension>
 
 </plugin>
