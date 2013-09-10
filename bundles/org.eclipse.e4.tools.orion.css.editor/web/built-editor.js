@@ -404,6 +404,137 @@ var requirejs, require, define;
 
 define("almond", function(){});
 
+/*******************************************************************************
+ * @license
+ * Copyright (c) 2013 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials are made 
+ * available under the terms of the Eclipse Public License v1.0 
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
+ * 
+ * Contributors: IBM Corporation - initial API and implementation
+ ******************************************************************************/
+ 
+/*global define*/
+
+define("orion/editor/shim", [], function() { //$NON-NLS-0$
+	
+	if (!Object.create) {
+		Object.create = function(proto, props) {
+			function N() {}
+			N.prototype = proto;
+			var result = new N();
+			if (props) {
+				for (var p in props) {
+					if (props.hasOwnProperty(p)) {
+						if (props[p].hasOwnProperty("value")) { //$NON-NLS-0$
+							result[p] = props[p].value;
+						} else {
+							result[p] = function() {
+								if (arguments.length > 0) {
+									return props[p].get();
+								} else {
+									props[p].set(arguments);
+								}
+							};
+						}
+					}
+				}
+			}
+			return result;
+		};
+	}
+	if (!Object.keys) {
+		Object.keys = function(o) {
+			var result = [];
+			for (var p in o) {
+				if (o.hasOwnProperty(p)) {
+					result.push(p);
+				}
+			}
+			return result;
+		};
+	}
+
+	if (!Function.prototype.bind) {
+		Function.prototype.bind = function (context) {
+			var fn = this, fixed = Array.prototype.slice.call(arguments, 1);
+			if (fixed.length) {
+				return function() {
+					return arguments.length	? fn.apply(context, fixed.concat(Array.prototype.slice.call(arguments))) : fn.apply(context, fixed);
+				};
+			}
+			return function() {
+				return arguments.length ? fn.apply(context, arguments) : fn.call(context);
+			};
+		};
+	}
+
+	
+	if (!Array.prototype.indexOf) {
+		Array.prototype.indexOf = function(c) {
+			for (var i=0; i<this.length; i++) {
+				if (this[i] === c) {
+					return i;
+				}
+			}
+			return -1;
+		};
+	}
+	if (!Array.prototype.forEach) {
+		Array.prototype.forEach = function(func) {
+			for (var i=0; i<this.length; i++) {
+				func(this[i], i);
+			}
+		};
+	}
+	if (!Array.prototype.map) {
+		Array.prototype.map = function(func) {
+			var result = new Array(this.length);
+			for (var i=0; i<this.length; i++) {
+				result[i] = func(this[i]);
+			}
+			return result;
+		};
+	}
+	if (!Array.prototype.reduce) {
+		Array.prototype.reduce = function(func, initialValue){
+			var result, set = false;
+			if (1 < arguments.length) {
+				result = initialValue;
+				set = true;
+			}
+			for (var i = 0; this.length > i; ++i) {
+				if (set) {
+					result = func(result, this[i], i, this);
+				} else {
+					result = this[i];
+					set = true;
+				}
+			}
+			return result;
+		};
+	}
+	
+	if (!String.prototype.trim) {
+		String.prototype.trim = function(){
+			return this.replace(/^\s+/, '');
+		};
+	}
+	if (!String.prototype.trimLeft) {
+		String.prototype.trimLeft = function(){
+			return this.replace(/\s+$/, '');
+		};
+	}
+	if (!String.prototype.trimRight) {
+		String.prototype.trimRight = function(){
+			return this.replace(/^\s+|\s+$/g, '');
+		};
+	}
+
+	return {};
+});
+
 /**
  * @license RequireJS i18n 2.0.2 Copyright (c) 2010-2012, The Dojo Foundation All Rights Reserved.
  * Available via the MIT or new BSD license.
@@ -698,6 +829,8 @@ define('orion/editor/nls/root/messages',{
 	"toggleTabMode": "Toggle Tab Mode", //$NON-NLS-1$ //$NON-NLS-0$
 	"toggleOverwriteMode": "Toggle Overwrite Mode", //$NON-NLS-1$ //$NON-NLS-0$
 	
+	"committerOnTime": "${0} on ${1}", //$NON-NLS-1$ //$NON-NLS-0$
+	
 	//Emacs
 	"emacs": "Emacs", //$NON-NLS-1$ //$NON-NLS-0$
 	"exchangeMarkPoint": "Exchange Mark and Point", //$NON-NLS-1$ //$NON-NLS-0$
@@ -736,6 +869,7 @@ define('orion/editor/nls/root/messages',{
 	"expandAll": "Expand All", //$NON-NLS-1$ //$NON-NLS-0$
 	"collapseAll": "Collapse All", //$NON-NLS-1$ //$NON-NLS-0$
 	"lastEdit": "Last Edit Location", //$NON-NLS-1$ //$NON-NLS-0$
+	"trimTrailingWhitespaces": "Trim Trailing Whitespaces", //$NON-NLS-1$ //$NON-NLS-0$
 	"toggleLineComment": "Toggle Line Comment", //$NON-NLS-1$ //$NON-NLS-0$
 	"addBlockComment": "Add Block Comment", //$NON-NLS-1$ //$NON-NLS-0$
 	"removeBlockComment": "Remove Block Comment", //$NON-NLS-1$ //$NON-NLS-0$
@@ -872,7 +1006,7 @@ define("orion/editor/eventTarget", [], function() { //$NON-NLS-0$
 		 * @param {Function|EventListener} listener The function or the EventListener that will be executed when the event happens. 
 		 * @param {Boolean} [useCapture=false] <code>true</code> if the listener should be trigged in the capture phase.
 		 * 
-		 * @see #removeEventListener
+		 * @see orion.editor.EventTarget#removeEventListener
 		 */
 		addEventListener: function(type, listener, useCapture) {
 			if (!this._eventTypes) { this._eventTypes = {}; }
@@ -932,8 +1066,8 @@ define("orion/editor/eventTarget", [], function() { //$NON-NLS-0$
 		 * 
 		 * @param {String} type The event type
 		 * 
-		 * @see #addEventListener
-		 * @see #removeEventListener
+		 * @see orion.editor.EventTarget#addEventListener
+		 * @see orion.editor.EventTarget#removeEventListener
 		 */
 		isListening: function(type) {
 			if (!this._eventTypes) { return false; }
@@ -949,7 +1083,7 @@ define("orion/editor/eventTarget", [], function() { //$NON-NLS-0$
 		 * @param {Function|EventListener} listener The function or the EventListener that will be executed when the event happens. 
 		 * @param {Boolean} [useCapture=false] <code>true</code> if the listener should be trigged in the capture phase.
 		 * 
-		 * @see #addEventListener
+		 * @see orion.editor.EventTarget#addEventListener
 		 */
 		removeEventListener: function(type, listener, useCapture){
 			if (!this._eventTypes) { return; }
@@ -1253,7 +1387,7 @@ define("orion/editor/textModel", ['orion/editor/eventTarget', 'orion/util'], fun
 		 * @param {Boolean} [includeDelimiter=false] whether or not to include the line delimiter. 
 		 * @returns {String} the line text or <code>null</code> if out of range.
 		 *
-		 * @see #getLineAtOffset
+		 * @see orion.editor.TextModel#getLineAtOffset
 		 */
 		getLine: function(lineIndex, includeDelimiter) {
 			var lineCount = this.getLineCount();
@@ -1359,7 +1493,7 @@ define("orion/editor/textModel", ['orion/editor/eventTarget', 'orion/util'], fun
 		 * @param {Boolean} [includeDelimiter=false] whether or not to include the line delimiter. 
 		 * @return {Number} the line end offset or <code>-1</code> if out of range.
 		 *
-		 * @see #getLineStart
+		 * @see orion.editor.TextModel#getLineStart
 		 */
 		getLineEnd: function(lineIndex, includeDelimiter) {
 			var lineCount = this.getLineCount();
@@ -1391,7 +1525,7 @@ define("orion/editor/textModel", ['orion/editor/eventTarget', 'orion/util'], fun
 		 * @param {Number} lineIndex the zero based index of the line.
 		 * @return {Number} the line start offset or <code>-1</code> if out of range.
 		 *
-		 * @see #getLineEnd
+		 * @see orion.editor.TextModel#getLineEnd
 		 */
 		getLineStart: function(lineIndex) {
 			if (!(0 <= lineIndex && lineIndex < this.getLineCount())) {
@@ -1409,7 +1543,7 @@ define("orion/editor/textModel", ['orion/editor/eventTarget', 'orion/util'], fun
 		 * @param {Number} [start=0] the zero based start offset of text range.
 		 * @param {Number} [end=char count] the zero based end offset of text range.
 		 *
-		 * @see #setText
+		 * @see orion.editor.TextModel#setText
 		 */
 		getText: function(start, end) {
 			if (start === undefined) { start = 0; }
@@ -1524,7 +1658,7 @@ define("orion/editor/textModel", ['orion/editor/eventTarget', 'orion/util'], fun
 		 * @param {Number} [start=0] the zero based start offset of text range.
 		 * @param {Number} [end=char count] the zero based end offset of text range.
 		 *
-		 * @see #getText
+		 * @see orion.editor.TextModel#getText
 		 */
 		setText: function(text, start, end) {
 			if (text === undefined) { text = ""; }
@@ -1897,8 +2031,8 @@ define("orion/editor/keyModes", [ //$NON-NLS-0$
 		 * @param {String} actionID the action ID.
 		 * @returns {orion.editor.KeyBinding[]} the array of key bindings associated to the given action ID.
 		 *
-		 * @see #setKeyBinding
-		 * @see #setAction
+		 * @see orion.editor.KeyModesetKeyBinding
+		 * @see orion.editor.KeyModesetAction
 		 */
 		getKeyBindings: function (actionID) {
 			var result = [];
@@ -1917,12 +2051,14 @@ define("orion/editor/keyModes", [ //$NON-NLS-0$
 			return this._view.getKeyModes().indexOf(this) !== -1;
 		},
 		match: function(e) {
-			switch (e.keyCode) {
-				case 16: /* Shift */
-				case 17: /* Control */
-				case 18: /* Alt */
-				case 91: /* Command */
-					return undefined;
+			if (e.type === "keydown") { //$NON-NLS-0$
+				switch (e.keyCode) {
+					case 16: /* Shift */
+					case 17: /* Control */
+					case 18: /* Alt */
+					case 91: /* Command */
+						return undefined;
+				}
 			}
 			var keyBindingIndex = this._keyBindingIndex;
 			var keyBindings = this._matchingKeyBindings || this._keyBindings;
@@ -2206,7 +2342,7 @@ define("orion/editor/textTheme", //$NON-NLS-0$
 		/**
 		 * Returns the theme className.
 		 *
-		 * @see #setThemeClass
+		 * @see orion.editor.TextTheme#setThemeClass
 		 */
 		getThemeClass: function() {
 			return this._themeClass;
@@ -2238,8 +2374,8 @@ define("orion/editor/textTheme", //$NON-NLS-0$
 		 * @param {String} className the new theme className.
 		 * @param {String|orion.editor.ThemeStyleSheet} styleSheet the CSS stylesheet for the new theme className.
 		 *
-		 * @see #getThemeClass
-		 * @see #onThemeChanged
+		 * @see orion.editor.TextTheme#getThemeClass
+		 * @see orion.editor.TextTheme#onThemeChanged
 		 */
 		 setThemeClass: function(className, styleSheet) {
 			var self = this;
@@ -2407,7 +2543,61 @@ define("orion/editor/textTheme", //$NON-NLS-0$
 
 /*******************************************************************************
  * @license
- * Copyright (c) 2010, 2012 IBM Corporation and others.
+ * Copyright (c) 2013 IBM Corporation and others.
+ * All rights reserved. This program and the accompanying materials are made 
+ * available under the terms of the Eclipse Public License v1.0 
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
+ * 
+ * Contributors: IBM Corporation - initial API and implementation
+ ******************************************************************************/
+ 
+/*global define*/
+
+define("orion/editor/util", [], function() { //$NON-NLS-0$
+	
+	/** @private */
+	function addEventListener(node, type, handler, capture) {
+		if (typeof node.addEventListener === "function") { //$NON-NLS-0$
+			node.addEventListener(type, handler, capture === true);
+		} else {
+			node.attachEvent("on" + type, handler); //$NON-NLS-0$
+		}
+	}
+	/** @private */
+	function removeEventListener(node, type, handler, capture) {
+		if (typeof node.removeEventListener === "function") { //$NON-NLS-0$
+			node.removeEventListener(type, handler, capture === true);
+		} else {
+			node.detachEvent("on" + type, handler); //$NON-NLS-0$
+		}
+	}
+	/** @private */
+	function contains(topNode, node) {
+		if (!node) { return false; }
+		if (!topNode.compareDocumentPosition) {
+			var temp = node;
+			while (temp) {
+				if (topNode === temp) {
+					return true;
+				}
+				temp = temp.parentNode;
+			}
+			return false;
+		}
+		return topNode === node || (topNode.compareDocumentPosition(node) & 16) !== 0;
+	}
+
+	return {
+		contains: contains,
+		addEventListener: addEventListener,
+		removeEventListener: removeEventListener
+	};
+});
+
+/*******************************************************************************
+ * @license
+ * Copyright (c) 2010, 2013 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials are made 
  * available under the terms of the Eclipse Public License v1.0 
  * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
@@ -2427,29 +2617,16 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 	'orion/editor/keyModes', //$NON-NLS-0$
 	'orion/editor/eventTarget', //$NON-NLS-0$
 	'orion/editor/textTheme', //$NON-NLS-0$
+	'orion/editor/util', //$NON-NLS-0$
 	'orion/util' //$NON-NLS-0$
-], function(messages, mTextModel, mKeyModes, mEventTarget, mTextTheme, util) {
+], function(messages, mTextModel, mKeyModes, mEventTarget, mTextTheme, textUtil, util) {
 
 	/** @private */
 	function getWindow(document) {
 		return document.defaultView || document.parentWindow;
 	}
-	/** @private */
-	function addHandler(node, type, handler, capture) {
-		if (typeof node.addEventListener === "function") { //$NON-NLS-0$
-			node.addEventListener(type, handler, capture === true);
-		} else {
-			node.attachEvent("on" + type, handler); //$NON-NLS-0$
-		}
-	}
-	/** @private */
-	function removeHandler(node, type, handler, capture) {
-		if (typeof node.removeEventListener === "function") { //$NON-NLS-0$
-			node.removeEventListener(type, handler, capture === true);
-		} else {
-			node.detachEvent("on" + type, handler); //$NON-NLS-0$
-		}
-	}
+	var addHandler = textUtil.addEventListener;
+	var removeHandler = textUtil.removeEventListener;
 	/** @private */
 	function applyStyle(style, node, reset) {
 		if (reset) {
@@ -2948,10 +3125,12 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 						if (start < styleStart) {
 							this._createRange(text, start, styleStart, null, data);
 						}
-						while (i + 1 < ranges.length && ranges[i + 1].start - lineStart === styleEnd && compare(range.style, ranges[i + 1].style)) {
-							range = ranges[i + 1];
-							styleEnd = Math.min(lineStart + end, range.end) - lineStart;
-							i++;
+						if (!range.style || !range.style.unmergeable) {
+							while (i + 1 < ranges.length && ranges[i + 1].start - lineStart === styleEnd && compare(range.style, ranges[i + 1].style)) {
+								range = ranges[i + 1];
+								styleEnd = Math.min(lineStart + end, range.end) - lineStart;
+								i++;
+							}
 						}
 						this._createRange(text, styleStart, styleEnd, range.style, data);
 						start = styleEnd;
@@ -2967,7 +3146,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			var tabSize = this.view._customTabSize, range;
 			if (tabSize && tabSize !== 8) {
 				var tabIndex = text.indexOf("\t", start); //$NON-NLS-0$
-				while (tabIndex !== -1) {
+				while (tabIndex !== -1 && tabIndex < end) {
 					if (start < tabIndex) {
 						range = {text: text.substring(start, tabIndex), style: style};
 						data.ranges.push(range);
@@ -3061,7 +3240,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 					if (lineOffset + nodeLength > offset) {
 						var index = offset - lineOffset;
 						var range;
-						if (view._isRangeRects) {
+						if (textNode.length === 1) {
+							result = new TextRect(lineChild.getBoundingClientRect());
+						} else if (view._isRangeRects) {
 							range = document.createRange();
 							range.setStart(textNode, index);
 							range.setEnd(textNode, index + 1);
@@ -3070,9 +3251,19 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 							range = document.body.createTextRange();
 							range.moveToElementText(lineChild);
 							range.collapse();
+							/*
+							* Bug in IE8. TextRange.getClientRects() and TextRange.getBoundingClientRect() fails
+							* if the line child is not the first element in the line and if the start offset is 0. 
+							* The fix is to use Node.getClientRects() left edge instead.
+							*/
+							var fixIE8 = index === 0 && util.isIE === 8;
+							if (fixIE8) { index = 1; }
 							range.moveEnd("character", index + 1); //$NON-NLS-0$
 							range.moveStart("character", index); //$NON-NLS-0$
 							result = new TextRect(range.getBoundingClientRect());
+							if (fixIE8) {
+								result.left = lineChild.getClientRects()[0].left;
+							}
 						} else {
 							var text = textNode.data;
 							lineChild.removeChild(textNode);
@@ -3296,6 +3487,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 					rect = rects[j];
 					if (rect.left <= x && x < rect.right && (!view._wrapMode || (rect.top <= y && y < rect.bottom))) {
 						var range, start, end;
+						var rl = rect.left, fixIE8;
 						if (util.isIE || view._isRangeRects) {
 							range = view._isRangeRects ? document.createRange() : document.body.createTextRange();
 							var high = nodeLength;
@@ -3304,10 +3496,17 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 								var mid = Math.floor((high + low) / 2);
 								start = low + 1;
 								end = mid === nodeLength - 1 && lineChild.ignoreChars ? textNode.length : mid + 1;
+								/*
+								* Bug in IE8. TextRange.getClientRects() and TextRange.getBoundingClientRect() fails
+								* if the line child is not the first element in the line and if the start offset is 0. 
+								* The fix is to use Node.getClientRects() left edge instead.
+								*/
+								fixIE8 = start === 0 && util.isIE === 8;
 								if (view._isRangeRects) {
 									range.setStart(textNode, start);
 									range.setEnd(textNode, end);
 								} else {
+									if (fixIE8) { start = 1; } 
 									range.moveToElementText(lineChild);
 									range.move("character", start); //$NON-NLS-0$
 									range.moveEnd("character", end - start); //$NON-NLS-0$
@@ -3316,7 +3515,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 								var found = false;
 								for (var k = 0; k < rects.length; k++) {
 									rect = rects[k];
-									rangeLeft = rect.left * xFactor - lineRect.left;
+									rangeLeft = (fixIE8 ? rl : rect.left) * xFactor - lineRect.left;
 									rangeRight = rect.right * xFactor - lineRect.left;
 									rangeTop = rect.top * yFactor - lineRect.top;
 									rangeBottom = rect.bottom * yFactor - lineRect.top;
@@ -3342,11 +3541,15 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 								range.move("character", start); //$NON-NLS-0$
 								range.moveEnd("character", end - start); //$NON-NLS-0$
 							}
-							rect = range.getClientRects()[0];
-							rangeLeft = rect.left * xFactor - lineRect.left;
-							rangeRight = rect.right * xFactor - lineRect.left;
-							//TODO test for character trailing (wrong for bidi)
-							var trailing = x > (rangeLeft + (rangeRight - rangeLeft) / 2);
+							rects = range.getClientRects();
+							var trailing = false;
+							if (rects.length > 0) {
+								rect = rects[0];
+								rangeLeft = (fixIE8 ? rl : rect.left) * xFactor - lineRect.left;
+								rangeRight = rect.right * xFactor - lineRect.left;
+								//TODO test for character trailing (wrong for bidi)
+								trailing = x > (rangeLeft + (rangeRight - rangeLeft) / 2);
+							}
 							// Handle Unicode surrogates
 							var offsetInLine = offset - lineStart;
 							var lineText = model.getLine(lineIndex);
@@ -3622,6 +3825,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 	 * @property {String} [themeClass] the CSS class for the view theming.
 	 * @property {Number} [tabSize=8] The number of spaces in a tab.
 	 * @property {Boolean} [overwriteMode=false] whether or not the view is in insert/overwrite mode.
+	 * @property {Boolean} [singleMode=false] whether or not the editor is in single line mode.
 	 * @property {Boolean} [wrapMode=false] whether or not the view wraps lines.
 	 * @property {Boolean} [wrapable=false] whether or not the view is wrappable.
 	 * @property {Number} [scrollAnimation=0] the time duration in miliseconds for scrolling animation. <code>0</code> means no animation.
@@ -3738,10 +3942,10 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {String} from the source coordinate space.
 		 * @param {String} to the destination coordinate space.
 		 *
-		 * @see #getLocationAtOffset
-		 * @see #getOffsetAtLocation
-		 * @see #getTopPixel
-		 * @see #setTopPixel
+		 * @see orion.editor.TextView#getLocationAtOffset
+		 * @see orion.editor.TextView#getOffsetAtLocation
+		 * @see orion.editor.TextView#getTopPixel
+		 * @see orion.editor.TextView#setTopPixel
 		 */
 		convert: function(rect, from, to) {
 			if (!this._clientDiv) { return; }
@@ -3775,7 +3979,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * attached to view can release their references.
 		 * </p>
 		 *
-		 * @see #onDestroy
+		 * @see orion.editor.TextView#onDestroy
 		 */
 		destroy: function() {
 			/* Destroy rulers*/
@@ -3810,7 +4014,6 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			* The fix is to call _updateDOMSelection() before calling focus().
 			*/
 			this._updateDOMSelection();
-			if (util.isOpera) { this._clientDiv.blur(); }
 			this._clientDiv.focus();
 			/*
 			* Feature in Safari. When focus is called the browser selects the clientDiv
@@ -3903,10 +4106,10 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Boolean} [defaultAction=false] whether or not the predefined actions are included.
 		 * @returns {String[]} an array of action IDs defined in the text view.
 		 *
-		 * @see #invokeAction
-		 * @see #setAction
-		 * @see #setKeyBinding
-		 * @see #getKeyBindings
+		 * @see orion.editor.TextView#invokeAction
+		 * @see orion.editor.TextView#setAction
+		 * @see orion.editor.TextView#setKeyBinding
+		 * @see orion.editor.TextView#getKeyBindings
 		 */
 		getActions: function (defaultAction) {
 			var result = [];
@@ -3931,8 +4134,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *    parameter is ignored if the view is not big enough to show one line.
 		 * @returns {Number} the index of the bottom line.
 		 *
-		 * @see #getTopIndex
-		 * @see #setTopIndex
+		 * @see orion.editor.TextView#getTopIndex
+		 * @see orion.editor.TextView#setTopIndex
 		 */
 		getBottomIndex: function(fullyVisible) {
 			if (!this._clientDiv) { return 0; }
@@ -3948,9 +4151,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @returns {Number} the bottom pixel.
 		 *
-		 * @see #getTopPixel
-		 * @see #setTopPixel
-		 * @see #convert
+		 * @see orion.editor.TextView#getTopPixel
+		 * @see orion.editor.TextView#setTopPixel
+		 * @see orion.editor.TextView#convert
 		 */
 		getBottomPixel: function() {
 			if (!this._clientDiv) { return 0; }
@@ -3959,11 +4162,11 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		/**
 		 * Returns the caret offset relative to the start of the document.
 		 *
-		 * @returns the caret offset relative to the start of the document.
+		 * @returns {Number} the caret offset relative to the start of the document.
 		 *
-		 * @see #setCaretOffset
-		 * @see #setSelection
-		 * @see #getSelection
+		 * @see orion.editor.TextView#setCaretOffset
+		 * @see orion.editor.TextView#setSelection
+		 * @see orion.editor.TextView#getSelection
 		 */
 		getCaretOffset: function () {
 			var s = this._getSelection();
@@ -3976,12 +4179,12 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * client area position is relative to the beginning of the document.
 		 * </p>
 		 *
-		 * @returns the client area rectangle {x, y, width, height}.
+		 * @returns {Object} the client area rectangle {x, y, width, height}.
 		 *
-		 * @see #getTopPixel
-		 * @see #getBottomPixel
-		 * @see #getHorizontalPixel
-		 * @see #convert
+		 * @see orion.editor.TextView#getTopPixel
+		 * @see orion.editor.TextView#getBottomPixel
+		 * @see orion.editor.TextView#getHorizontalPixel
+		 * @see orion.editor.TextView#convert
 		 */
 		getClientArea: function() {
 			if (!this._clientDiv) { return {x: 0, y: 0, width: 0, height: 0}; }
@@ -3998,8 +4201,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @returns {Number} the horizontal pixel.
 		 *
-		 * @see #setHorizontalPixel
-		 * @see #convert
+		 * @see orion.editor.TextView#setHorizontalPixel
+		 * @see orion.editor.TextView#convert
 		 */
 		getHorizontalPixel: function() {
 			if (!this._clientDiv) { return 0; }
@@ -4011,8 +4214,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {String} actionID the action ID.
 		 * @returns {orion.editor.KeyBinding[]} the array of key bindings associated to the given action ID.
 		 *
-		 * @see #setKeyBinding
-		 * @see #setAction
+		 * @see orion.editor.TextView#setKeyBinding
+		 * @see orion.editor.TextView#setAction
 		 */
 		getKeyBindings: function (actionID) {
 			var result = [];
@@ -4027,8 +4230,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @returns {orion.editor.KeyMode[]} the array of key modes.
 		 *
-		 * @see #addKeyMode
-		 * @see #removeKeyMode
+		 * @see orion.editor.TextView#addKeyMode
+		 * @see orion.editor.TextView#removeKeyMode
 		 */
 		getKeyModes: function() {
 			return this._keyModes.slice(0);
@@ -4040,7 +4243,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Number} [lineIndex] the line index.
 		 * @returns {Number} the height of the line in pixels.
 		 *
-		 * @see #getLinePixel
+		 * @see orion.editor.TextView#getLinePixel
 		 */
 		getLineHeight: function(lineIndex) {
 			if (!this._clientDiv) { return 0; }
@@ -4052,7 +4255,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Number} [y] the line pixel.
 		 * @returns {Number} the line index for the specified pixel position.
 		 *
-		 * @see #getLinePixel
+		 * @see orion.editor.TextView#getLinePixel
 		 */
 		getLineIndex: function(y) {
 			if (!this._clientDiv) { return 0; }
@@ -4068,9 +4271,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Number} lineIndex the line index.
 		 * @returns {Number} the pixel position of the line.
 		 *
-		 * @see #setTopPixel
-		 * @see #getLineIndex
-		 * @see #convert
+		 * @see orion.editor.TextView#setTopPixel
+		 * @see orion.editor.TextView#getLineIndex
+		 * @see orion.editor.TextView#convert
 		 */
 		getLinePixel: function(lineIndex) {
 			if (!this._clientDiv) { return 0; }
@@ -4085,10 +4288,10 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * </p>
 		 *
 		 * @param {Number} offset the character offset
-		 * @returns the {x, y} pixel location of the given offset.
+		 * @returns {Object} the {x, y} pixel location of the given offset.
 		 *
-		 * @see #getOffsetAtLocation
-		 * @see #convert
+		 * @see orion.editor.TextView#getOffsetAtLocation
+		 * @see orion.editor.TextView#convert
 		 */
 		getLocationAtOffset: function(offset) {
 			if (!this._clientDiv) { return {x: 0, y: 0}; }
@@ -4113,7 +4316,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {String|orion.editor.TextViewOptions} [options] The options to return.
 		 * @return {Object|orion.editor.TextViewOptions} The requested options or an option value.
 		 *
-		 * @see #setOptions
+		 * @see orion.editor.TextView#setOptions
 		 */
 		getOptions: function() {
 			var options;
@@ -4154,9 +4357,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @param x the x of the location
 		 * @param y the y of the location
-		 * @returns the character offset at the given location.
+		 * @returns {Number} the character offset at the given location.
 		 *
-		 * @see #getLocationAtOffset
+		 * @see orion.editor.TextView#getLocationAtOffset
 		 */
 		getOffsetAtLocation: function(x, y) {
 			if (!this._clientDiv) { return 0; }
@@ -4169,9 +4372,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		/**
 		 * Get the view rulers.
 		 *
-		 * @returns the view rulers
+		 * @returns {orion.editor.Ruler[]} the view rulers
 		 *
-		 * @see #addRuler
+		 * @see orion.editor.TextView#addRuler
 		 */
 		getRulers: function() {
 			return this._rulers.slice(0);
@@ -4185,7 +4388,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * 
 		 * @returns {orion.editor.Selection} the view selection
 		 *
-		 * @see #setSelection
+		 * @see orion.editor.TextView#setSelection
 		 */
 		getSelection: function () {
 			var s = this._getSelection();
@@ -4200,7 +4403,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Number} [start=0] the start offset of text range.
 		 * @param {Number} [end=char count] the end offset of text range.
 		 *
-		 * @see #setText
+		 * @see orion.editor.TextView#setText
 		 */
 		getText: function(start, end) {
 			var model = this._model;
@@ -4218,8 +4421,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *    parameter is ignored if the view is not big enough to show one line.
 		 * @returns {Number} the index of the top line.
 		 *
-		 * @see #getBottomIndex
-		 * @see #setTopIndex
+		 * @see orion.editor.TextView#getBottomIndex
+		 * @see orion.editor.TextView#setTopIndex
 		 */
 		getTopIndex: function(fullyVisible) {
 			if (!this._clientDiv) { return 0; }
@@ -4235,9 +4438,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @returns {Number} the top pixel.
 		 *
-		 * @see #getBottomPixel
-		 * @see #setTopPixel
-		 * @see #convert
+		 * @see orion.editor.TextView#getBottomPixel
+		 * @see orion.editor.TextView#setTopPixel
+		 * @see orion.editor.TextView#convert
 		 */
 		getTopPixel: function() {
 			if (!this._clientDiv) { return 0; }
@@ -4259,8 +4462,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Object} [actionOptions] action specific options to be passed to the action handlers.
 		 * @returns {Boolean} <code>true</code> if the action was executed.
 		 *
-		 * @see #setAction
-		 * @see #getActions
+		 * @see orion.editor.TextView#setAction
+		 * @see orion.editor.TextView#getActions
 		 */
 		invokeAction: function (actionID, defaultAction, actionOptions) {
 			if (!this._clientDiv) { return; }
@@ -4346,7 +4549,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @event
 		 * @param {orion.editor.DestroyEvent} destroyEvent the event
 		 *
-		 * @see #destroy
+		 * @see orion.editor.TextView#destroy
 		 */
 		onDestroy: function(destroyEvent) {
 			return this.dispatchEvent(destroyEvent);
@@ -4565,8 +4768,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * </p>		 
 		 * @name orion.editor.ScrollEvent
 		 * 
-		 * @property oldValue The old scroll {x,y}.
-		 * @property newValue The new scroll {x,y}.
+		 * @property {Object} oldValue The old scroll {x,y}.
+		 * @property {Object} newValue The new scroll {x,y}.
 		 */
 		/**
 		 * This event is sent when the text view scrolls vertically or horizontally.
@@ -4646,9 +4849,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		/**
 		 * Redraws the entire view, including rulers.
 		 *
-		 * @see #redrawLines
-		 * @see #redrawRange
-		 * @see #setRedraw
+		 * @see orion.editor.TextView#redrawLines
+		 * @see orion.editor.TextView#redrawRange
+		 * @see orion.editor.TextView#setRedraw
 		 */
 		redraw: function() {
 			if (this._redrawCount > 0) { return; }
@@ -4672,9 +4875,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Number} [startLine=0] the start line
 		 * @param {Number} [endLine=line count] the end line
 		 *
-		 * @see #redraw
-		 * @see #redrawRange
-		 * @see #setRedraw
+		 * @see orion.editor.TextView#redraw
+		 * @see orion.editor.TextView#redrawRange
+		 * @see orion.editor.TextView#setRedraw
 		 */
 		redrawLines: function(startLine, endLine, ruler) {
 			if (this._redrawCount > 0) { return; }
@@ -4731,9 +4934,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Number} [start=0] the start offset of text range
 		 * @param {Number} [end=char count] the end offset of text range
 		 *
-		 * @see #redraw
-		 * @see #redrawLines
-		 * @see #setRedraw
+		 * @see orion.editor.TextView#redraw
+		 * @see orion.editor.TextView#redrawLines
+		 * @see orion.editor.TextView#setRedraw
 		 */
 		redrawRange: function(start, end) {
 			if (this._redrawCount > 0) { return; }
@@ -4806,8 +5009,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Function} handler the action handler.
 		 * @param {orion.editor.ActionDescription} [actionDescription=undefined] the action description.
 		 *
-		 * @see #getActions
-		 * @see #invokeAction
+		 * @see orion.editor.TextView#getActions
+		 * @see orion.editor.TextView#invokeAction
 		 */
 		setAction: function(actionID, handler, actionDescription) {
 			if (!actionID) { return; }
@@ -4843,9 +5046,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Function} [callback] if callback is specified and <code>scrollAnimation</code> is not zero, view scrolling is animated and
 		 *					the callback is called when the animation is done. Otherwise, callback is callback right away.
 		 *
-		 * @see #getCaretOffset
-		 * @see #setSelection
-		 * @see #getSelection
+		 * @see orion.editor.TextView#getCaretOffset
+		 * @see orion.editor.TextView#setSelection
+		 * @see orion.editor.TextView#getSelection
 		 */
 		setCaretOffset: function(offset, show, callback) {
 			var charCount = this._model.getCharCount();
@@ -4863,8 +5066,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @param {Number} pixel the horizontal pixel.
 		 *
-		 * @see #getHorizontalPixel
-		 * @see #convert
+		 * @see orion.editor.TextView#getHorizontalPixel
+		 * @see orion.editor.TextView#convert
 		 */
 		setHorizontalPixel: function(pixel) {
 			if (!this._clientDiv) { return; }
@@ -4883,7 +5086,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @param {Boolean} redraw the new redraw state
 		 * 
-		 * @see #redraw
+		 * @see orion.editor.TextView#redraw
 		 */
 		setRedraw: function(redraw) {
 			if (redraw) {
@@ -4939,7 +5142,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @param {orion.editor.TextViewOptions} options the view options.
 		 * 
-		 * @see #getOptions
+		 * @see orion.editor.TextView#getOptions
 		 */
 		setOptions: function (options) {
 			var defaultOptions = this._defaultOptions();
@@ -4980,7 +5183,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Function} [callback] if callback is specified and <code>scrollAnimation</code> is not zero, view scrolling is animated and
 		 *					the callback is called when the animation is done. Otherwise, callback is callback right away.
 		 *
-		 * @see #getSelection
+		 * @see orion.editor.TextView#getSelection
 		 */
 		setSelection: function (start, end, show, callback) {
 			var caret = start > end;
@@ -5010,7 +5213,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 * @param {Number} [start=0] the start offset of text range.
 		 * @param {Number} [end=char count] the end offset of text range.
 		 *
-		 * @see #getText
+		 * @see orion.editor.TextView#getText
 		 */
 		setText: function (text, start, end) {
 			var reset = start === undefined && end === undefined;
@@ -5043,8 +5246,8 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @param {Number} topIndex the index of the top line.
 		 *
-		 * @see #getBottomIndex
-		 * @see #getTopIndex
+		 * @see orion.editor.TextView#getBottomIndex
+		 * @see orion.editor.TextView#getTopIndex
 		 */
 		setTopIndex: function(topIndex) {
 			if (!this._clientDiv) { return; }
@@ -5060,9 +5263,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		 *
 		 * @param {Number} pixel the top pixel.
 		 *
-		 * @see #getBottomPixel
-		 * @see #getTopPixel
-		 * @see #convert
+		 * @see orion.editor.TextView#getBottomPixel
+		 * @see orion.editor.TextView#getTopPixel
+		 * @see orion.editor.TextView#convert
 		 */
 		setTopPixel: function(pixel) {
 			if (!this._clientDiv) { return; }
@@ -5071,10 +5274,10 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		/**
 		 * Scrolls the selection into view if needed.
 		 *
-		 * @returns true if the view was scrolled. 
+		 * @returns {Boolean} true if the view was scrolled.
 		 *
-		 * @see #getSelection
-		 * @see #setSelection
+		 * @see orion.editor.TextView#getSelection
+		 * @see orion.editor.TextView#setSelection
 		 */
 		showSelection: function() {
 			return this._showCaret(true);
@@ -5547,6 +5750,12 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 				}
 			}
 		},
+		_handleDocKeyUp: function (e) {
+			var ctrlKey = util.isMac ? e.metaKey : e.ctrlKey;
+			if (!ctrlKey) {
+				this._setLinksVisible(false);
+			}
+		},
 		_handleKeyUp: function (e) {
 			if (this._ignoreEvent(e)) { return; }
 			if (this.isListening("KeyUp")) { //$NON-NLS-0$
@@ -5557,10 +5766,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 					return;
 				}
 			}
-			var ctrlKey = util.isMac ? e.metaKey : e.ctrlKey;
-			if (!ctrlKey) {
-				this._setLinksVisible(false);
-			}
+			this._handleDocKeyUp(e);
 			// don't commit for space (it happens during JP composition)  
 			if (e.keyCode === 13) {
 				this._commitIME();
@@ -5965,8 +6171,23 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 				* Feature in IE7. For some reason, sometimes Internet Explorer 7 
 				* returns incorrect values for element.getBoundingClientRect() when 
 				* inside a resize handler. The fix is to queue the work.
+				*/			
+				var queue = util.isIE < 9;
+
+				/*
+				* The calculated metrics may be out of date when the zoom level changes.
 				*/
-				if (util.isIE < 9) {
+				var metrics = this._calculateMetrics();
+				if (!compare(metrics, this._metrics)) {
+					if (this._variableLineHeight) {
+						this._variableLineHeight = false;
+						this._resetLineHeight();
+					}
+					this._metrics = metrics;
+					queue = true;
+				}
+
+				if (queue) {
 					this._queueUpdate();
 				} else {
 					this._update();
@@ -6010,7 +6231,16 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 						if (ruler.onMouseOver) { ruler.onMouseOver(lineIndex, e); }
 						break;
 					case "mouseout": //$NON-NLS-0$
-						if (ruler.onMouseOut) { ruler.onMouseOut(lineIndex, e); }
+						if (ruler.onMouseOut) { 
+							var tmp = e.relatedTarget;
+							while (tmp && tmp !== this._rootDiv) {
+								if (tmp === element) {
+									return;
+								}
+								tmp = tmp.parentNode;
+							}
+							ruler.onMouseOut(lineIndex, e); 
+						}
 						break;
 				}
 			}
@@ -6907,13 +7137,16 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			parent.appendChild(div1);
 			var rect1 = div1.getBoundingClientRect();
 			var rect2 = div2.getBoundingClientRect();
-			div1.style.overflow = 'hidden'; //$NON-NLS-0$
-			div2.style.height = "200px"; //$NON-NLS-0$
-			var w1 = div1.clientWidth;
-			div1.style.overflow = 'scroll'; //$NON-NLS-0$
-			var w2 = div1.clientWidth;
-			parent.removeChild(div1);
-			var scrollWidth = w1 - w2;
+			var scrollWidth = 0;
+			if (!this._singleMode) {
+				div1.style.overflow = 'hidden'; //$NON-NLS-0$
+				div2.style.height = "200px"; //$NON-NLS-0$
+				var w1 = div1.clientWidth;
+				div1.style.overflow = 'scroll'; //$NON-NLS-0$
+				var w2 = div1.clientWidth;
+				parent.removeChild(div1);
+				scrollWidth = w1 - w2;
+			}
 			pad = {
 				left: rect2.left - rect1.left,
 				top: rect2.top - rect1.top,
@@ -7046,7 +7279,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 				rulerParent.appendChild(div);
 			} else {
 				var sibling = rulerParent.firstChild;
-				while (sibling && --index > 0) {
+				while (sibling && index-- > 0) {
 					sibling = sibling.nextSibling;
 				}
 				rulerParent.insertBefore(div, sibling);
@@ -7089,7 +7322,6 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			viewDiv.className = "textviewScroll"; //$NON-NLS-0$
 			this._viewDiv = viewDiv;
 			viewDiv.tabIndex = -1;
-			viewDiv.style.overflow = "auto"; //$NON-NLS-0$
 			viewDiv.style.position = "absolute"; //$NON-NLS-0$
 			viewDiv.style.top = "0px"; //$NON-NLS-0$
 			viewDiv.style.bottom = "0px"; //$NON-NLS-0$
@@ -7126,15 +7358,6 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			scrollDiv.style.padding = "0px"; //$NON-NLS-0$
 			viewDiv.appendChild(scrollDiv);
 			
-			if (util.isFirefox) {
-				var clipboardDiv = util.createElement(document, "div"); //$NON-NLS-0$
-				this._clipboardDiv = clipboardDiv;
-				clipboardDiv.style.position = "fixed"; //$NON-NLS-0$
-				clipboardDiv.style.whiteSpace = "pre"; //$NON-NLS-0$
-				clipboardDiv.style.left = "-1000px"; //$NON-NLS-0$
-				rootDiv.appendChild(clipboardDiv);
-			}
-
 			if (!util.isIE && !util.isIOS) {
 				var clipDiv = util.createElement(document, "div"); //$NON-NLS-0$
 				this._clipDiv = clipDiv;
@@ -7160,6 +7383,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			var clientDiv = util.createElement(document, "div"); //$NON-NLS-0$
 			clientDiv.className = "textviewContent"; //$NON-NLS-0$
 			this._clientDiv = clientDiv;
+			clientDiv.tabIndex = 0;
 			clientDiv.style.position = "absolute"; //$NON-NLS-0$
 			clientDiv.style.borderWidth = "0px"; //$NON-NLS-0$
 			clientDiv.style.margin = "0px"; //$NON-NLS-0$
@@ -7243,6 +7467,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 				tabMode: { value: true, update: null },
 				tabSize: {value: 8, update: this._setTabSize},
 				expandTab: {value: false, update: null},
+				singleMode: {value: false, update: this._setSingleMode},
 				overwriteMode: { value: false, update: this._setOverwriteMode },
 				blockCursorVisible: { value: false, update: this._setBlockCursor},
 				wrapMode: {value: false, update: this._setWrapMode},
@@ -7376,11 +7601,16 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		_getClipboardText: function (event, handler) {
 			var delimiter = this._model.getLineDelimiter();
 			var clipboadText, text;
+			// IE
 			var window = this._getWindow();
-			if (window.clipboardData) {
-				//IE
+			var clipboardData = window.clipboardData;
+			// WebKit and Firefox > 21
+			if (!clipboardData && event) {
+				clipboardData = event.clipboardData;
+			}
+			if (clipboardData) {
 				clipboadText = [];
-				text = window.clipboardData.getData("Text"); //$NON-NLS-0$
+				text = clipboardData.getData(util.isIE ? "Text" : "text/plain"); //$NON-NLS-1$"//$NON-NLS-0$
 				convertDelimiter(text, function(t) {clipboadText.push(t);}, function() {clipboadText.push(delimiter);});
 				text = clipboadText.join("");
 				if (handler) { handler(text); }
@@ -7389,6 +7619,15 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			if (util.isFirefox) {
 				this._ignoreFocus = true;
 				var clipboardDiv = this._clipboardDiv;
+				var document = this._rootDiv.ownerDocument;
+				if (!clipboardDiv) {
+					clipboardDiv = util.createElement(document, "div"); //$NON-NLS-0$
+					this._clipboardDiv = clipboardDiv;
+					clipboardDiv.style.position = "fixed"; //$NON-NLS-0$
+					clipboardDiv.style.whiteSpace = "pre"; //$NON-NLS-0$
+					clipboardDiv.style.left = "-1000px"; //$NON-NLS-0$
+					this._rootDiv.appendChild(clipboardDiv);
+				}
 				clipboardDiv.innerHTML = "<pre contenteditable=''></pre>"; //$NON-NLS-0$
 				clipboardDiv.firstChild.focus();
 				var self = this;
@@ -7407,7 +7646,6 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 				/* Do not try execCommand if middle-click is used, because if we do, we get the clipboard text, not the primary selection text. */
 				if (!util.isLinux || this._lastMouseButton !== 2) {
 					try {
-						var document = clipboardDiv.ownerDocument;
 						result = document.execCommand("paste", false, null); //$NON-NLS-0$
 					} catch (ex) {
 						/* Firefox can throw even when execCommand() works, see bug 362835. */
@@ -7441,23 +7679,6 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 					handler(text);
 				}
 				return text;
-			}
-			//webkit
-			if (event && event.clipboardData) {
-				/*
-				* Webkit (Chrome/Safari) allows getData during the paste event
-				* Note: setData is not allowed, not even during copy/cut event
-				*/
-				clipboadText = [];
-				text = event.clipboardData.getData("text/plain"); //$NON-NLS-0$
-				convertDelimiter(text, function(t) {clipboadText.push(t);}, function() {clipboadText.push(delimiter);});
-				text = clipboadText.join("");
-				if (text && handler) {
-					handler(text);
-				}
-				return text;
-			} else {
-				//TODO try paste using extension (Chrome only)
 			}
 			return "";
 		},
@@ -7686,6 +7907,9 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			handlers.push({target: clientDiv, type: "keydown", handler: function(e) { return self._handleKeyDown(e ? e : window.event);}}); //$NON-NLS-0$
 			handlers.push({target: clientDiv, type: "keypress", handler: function(e) { return self._handleKeyPress(e ? e : window.event);}}); //$NON-NLS-0$
 			handlers.push({target: clientDiv, type: "keyup", handler: function(e) { return self._handleKeyUp(e ? e : window.event);}}); //$NON-NLS-0$
+			if (util.isIE) {
+				handlers.push({target: document, type: "keyup", handler: function(e) { return self._handleDocKeyUp(e ? e : window.event);}}); //$NON-NLS-0$
+			}
 			handlers.push({target: clientDiv, type: "contextmenu", handler: function(e) { return self._handleContextMenu(e ? e : window.event);}}); //$NON-NLS-0$
 			handlers.push({target: clientDiv, type: "copy", handler: function(e) { return self._handleCopy(e ? e : window.event);}}); //$NON-NLS-0$
 			handlers.push({target: clientDiv, type: "cut", handler: function(e) { return self._handleCut(e ? e : window.event);}}); //$NON-NLS-0$
@@ -7845,7 +8069,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			var model = this._model;
 			try {
 				if (e._ignoreDOMSelection) { this._ignoreDOMSelection = true; }
-				model.setText (e.text, e.start, e.end);
+				model.setText(e.text, e.start, e.end);
 			} finally {
 				if (e._ignoreDOMSelection) { this._ignoreDOMSelection = false; }
 			}
@@ -7989,10 +8213,11 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			}
 		},
 		_scrollViewAnimated: function (pixelX, pixelY, callback) {
+			var window = this._getWindow();
 			if (callback && this._scrollAnimation) {
 				var self = this;
 				this._animation = new Animation({
-					window: this._getWindow(),
+					window: window,
 					duration: this._scrollAnimation,
 					curve: [pixelY, 0],
 					onAnimate: function(x) {
@@ -8004,7 +8229,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 						self._animation = null;
 						self._scrollView (pixelX, pixelY);
 						if (callback) {
-							callback();
+							window.setTimeout(callback, 0);
 						}
 					}
 				});
@@ -8012,7 +8237,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			} else {
 				this._scrollView (pixelX, pixelY);
 				if (callback) {
-					callback();
+					window.setTimeout(callback, 0);
 				}
 			}
 		}, 
@@ -8038,22 +8263,21 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		},
 		_setClipboardText: function (text, event) {
 			var clipboardText;
-			var document = this._parent.ownerDocument;
+			// IE
 			var window = this._getWindow();
-			if (window.clipboardData) {
-				//IE
-				clipboardText = [];
-				convertDelimiter(text, function(t) {clipboardText.push(t);}, function() {clipboardText.push(util.platformDelimiter);});
-				return window.clipboardData.setData("Text", clipboardText.join("")); //$NON-NLS-0$
+			var clipboardData = window.clipboardData;
+			// WebKit and Firefox > 21
+			if (!clipboardData && event) {
+				clipboardData = event.clipboardData;
 			}
-			if (event && event.clipboardData) {
-				//webkit
+			if (clipboardData) {
 				clipboardText = [];
 				convertDelimiter(text, function(t) {clipboardText.push(t);}, function() {clipboardText.push(util.platformDelimiter);});
-				if (event.clipboardData.setData("text/plain", clipboardText.join(""))) { //$NON-NLS-0$
+				if (clipboardData.setData(util.isIE ? "Text" : "text/plain", clipboardText.join(""))) { //$NON-NLS-1$ //$NON-NLS-0$
 					return true;
 				}
 			}
+			var document = this._parent.ownerDocument;
 			var child = util.createElement(document, "pre"); //$NON-NLS-0$
 			child.style.position = "fixed"; //$NON-NLS-0$
 			child.style.left = "-1000px"; //$NON-NLS-0$
@@ -8556,6 +8780,11 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			this._readonly = readOnly;
 			this._clientDiv.setAttribute("aria-readonly", readOnly ? "true" : "false"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
 		},
+		_setSingleMode: function (singleMode, init) {
+			this._singleMode = singleMode;
+			this._updateOverflow();
+			this._updateStyle(init);
+		},
 		_setTabSize: function (tabSize, init) {
 			this._tabSize = tabSize;
 			this._customTabSize = undefined;
@@ -8595,18 +8824,15 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 		},
 		_setWrapMode: function (wrapMode, init) {
 			this._wrapMode = wrapMode && this._wrappable;
-			var clientDiv = this._clientDiv, viewDiv = this._viewDiv;
-			if (wrapMode) {
+			var clientDiv = this._clientDiv;
+			if (this._wrapMode) {
 				clientDiv.style.whiteSpace = "pre-wrap"; //$NON-NLS-0$
 				clientDiv.style.wordWrap = "break-word"; //$NON-NLS-0$
-				viewDiv.style.overflowX = "hidden"; //$NON-NLS-0$
-				viewDiv.style.overflowY = "scroll"; //$NON-NLS-0$
 			} else {
 				clientDiv.style.whiteSpace = "pre"; //$NON-NLS-0$
 				clientDiv.style.wordWrap = "normal"; //$NON-NLS-0$
-				viewDiv.style.overflowX = "auto"; //$NON-NLS-0$
-				viewDiv.style.overflowY = "auto"; //$NON-NLS-0$
 			}
+			this._updateOverflow();
 			if (!init) {
 				this.redraw();
 				this._resetLineWidth();
@@ -8721,6 +8947,7 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 			}
 		},
 		_updateDOMSelection: function () {
+			if (this._redrawCount > 0) { return; }
 			if (this._ignoreDOMSelection) { return; }
 			if (!this._clientDiv) { return; }
 			var selection = this._getSelection();
@@ -9094,6 +9321,21 @@ define("orion/editor/textView", [ //$NON-NLS-0$
 				}
 			}
 		},
+		_updateOverflow: function() {
+			var viewDiv = this._viewDiv;
+			if (this._wrapMode) {
+				viewDiv.style.overflowX = "hidden"; //$NON-NLS-0$
+				viewDiv.style.overflowY = "scroll"; //$NON-NLS-0$
+			} else {
+				if (this._singleMode) {
+					viewDiv.style.overflowX = "hidden"; //$NON-NLS-0$
+					viewDiv.style.overflowY = "hidden"; //$NON-NLS-0$
+				} else {
+					viewDiv.style.overflowX = "auto"; //$NON-NLS-0$
+					viewDiv.style.overflowY = "auto"; //$NON-NLS-0$
+				}
+			}
+		},
 		_updateRuler: function (divRuler, topIndex, bottomIndex, parentHeight) {
 			if (!divRuler) { return; }
 			var document = this._parent.ownerDocument;
@@ -9338,7 +9580,7 @@ define("orion/editor/projectionTextModel", ['orion/editor/textModel', 'orion/edi
 		 * </p>
 		 * @param {orion.editor.Projection} projection The projection range to be added.
 		 * 
-		 * @see #removeProjection
+		 * @see orion.editor.ProjectionTextModel#removeProjection
 		 */
 		addProjection: function(projection) {
 			if (!projection) {return;}
@@ -9385,7 +9627,7 @@ define("orion/editor/projectionTextModel", ['orion/editor/textModel', 'orion/edi
 		 * 
 		 * @return {orion.editor.Projection[]} The projection ranges.
 		 * 
-		 * @see #addProjection
+		 * @see orion.editor.ProjectionTextModel#addProjection
 		 */
 		getProjections: function() {
 			return this._projections.slice(0);
@@ -9437,7 +9679,7 @@ define("orion/editor/projectionTextModel", ['orion/editor/textModel', 'orion/edi
 		 * 
 		 * @param {orion.editor.Projection} projection The projection range to be removed.
 		 * 
-		 * @see #addProjection
+		 * @see orion.editor.ProjectionTextModel#addProjection
 		 */
 		removeProjection: function(projection) {
 			//TODO remove listeners from model
@@ -10017,6 +10259,17 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 	 */
 	AnnotationType.ANNOTATION_LINKED_GROUP = "orion.annotation.linkedGroup"; //$NON-NLS-0$
 	
+	/**
+	* Blame annotation type.
+	*/
+	AnnotationType.ANNOTATION_BLAME = "orion.annotation.blame"; //$NON-NLS-0$
+	
+	/**
+	* Current Blame annotation type.
+	*/
+	AnnotationType.ANNOTATION_CURRENT_BLAME = "orion.annotation.currentBlame"; //$NON-NLS-0$
+	
+	
 	/** @private */
 	var annotationTypes = {};
 	
@@ -10101,6 +10354,8 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 	registerType(AnnotationType.ANNOTATION_CURRENT_LINKED_GROUP);
 	registerType(AnnotationType.ANNOTATION_LINKED_GROUP);
 	registerType(AnnotationType.ANNOTATION_CURRENT_LINE, true);
+	registerType(AnnotationType.ANNOTATION_BLAME, true);
+	registerType(AnnotationType.ANNOTATION_CURRENT_BLAME, true);
 	AnnotationType.registerType(AnnotationType.ANNOTATION_FOLDING, FoldingAnnotation);
 	
 	/** 
@@ -10134,8 +10389,8 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 *
 		 * @param {Object} type the annotation type to be shown
 		 * 
-		 * @see #removeAnnotationType
-		 * @see #isAnnotationTypeVisible
+		 * @see orion.editor.AnnotationTypeList#removeAnnotationType
+		 * @see orion.editor.AnnotationTypeList#isAnnotationTypeVisible
 		 */
 		addAnnotationType: function(type) {
 			if (!this._annotationTypes) { this._annotationTypes = []; }
@@ -10151,9 +10406,9 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 *
 		 * @param {Object} type the annotation type
 		 * 
-		 * @see #addAnnotationType
-		 * @see #removeAnnotationType
-		 * @see #isAnnotationTypeVisible
+		 * @see orion.editor.AnnotationTypeList#addAnnotationType
+		 * @see orion.editor.AnnotationTypeList#removeAnnotationType
+		 * @see orion.editor.AnnotationTypeList#isAnnotationTypeVisible
 		 */
 		getAnnotationTypePriority: function(type) {
 			if (this._annotationTypes) { 
@@ -10194,8 +10449,8 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * @param {Object} type the annotation type 
 		 * @returns {Boolean} whether the specified annotation type is shown
 		 * 
-		 * @see #addAnnotationType
-		 * @see #removeAnnotationType
+		 * @see orion.editor.AnnotationTypeList#addAnnotationType
+		 * @see orion.editor.AnnotationTypeList#removeAnnotationType
 		 */
 		isAnnotationTypeVisible: function(type) {
 			return this.getAnnotationTypePriority(type) !== 0;
@@ -10205,8 +10460,8 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 *
 		 * @param {Object} type the annotation type to be removed
 		 * 
-		 * @see #addAnnotationType
-		 * @see #isAnnotationTypeVisible
+		 * @see orion.editor.AnnotationTypeList#addAnnotationType
+		 * @see orion.editor.AnnotationTypeList#isAnnotationTypeVisible
 		 */
 		removeAnnotationType: function(type) {
 			if (!this._annotationTypes) { return; }
@@ -10222,7 +10477,7 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 	/**
 	 * Constructs an annotation model.
 	 * 
-	 * @param {textModel} textModel The text model.
+	 * @param {orion.editor.TextModel} textModel The text model.
 	 * 
 	 * @class This object manages annotations for a <code>TextModel</code>.
 	 * <p>
@@ -10253,7 +10508,7 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * 
 		 * @param {orion.editor.Annotation} annotation the annotation to be added.
 		 * 
-		 * @see #removeAnnotation
+		 * @see orion.editor.AnnotationModel#removeAnnotation
 		 */
 		addAnnotation: function(annotation) {
 			if (!annotation) { return; }
@@ -10273,7 +10528,7 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * 
 		 * @return {orion.editor.TextModel} The text model.
 		 * 
-		 * @see #setTextModel
+		 * @see orion.editor.AnnotationModel#setTextModel
 		 */
 		getTextModel: function() {
 			return this._model;
@@ -10330,7 +10585,7 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * 
 		 * @param {orion.editor.Annotation} annotation the modified annotation.
 		 * 
-		 * @see #addAnnotation
+		 * @see orion.editor.AnnotationModel#addAnnotation
 		 */
 		modifyAnnotation: function(annotation) {
 			if (!annotation) { return; }
@@ -10362,7 +10617,7 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * 
 		 * @param {Object} type the type of annotations to be removed.
 		 * 
-		 * @see #removeAnnotation
+		 * @see orion.editor.AnnotationModel#removeAnnotation
 		 */
 		removeAnnotations: function(type) {
 			var annotations = this._annotations;
@@ -10373,8 +10628,8 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 					var annotation = annotations[i];
 					if (annotation.type === type) {
 						annotations.splice(i, 1);
+						removed.splice(0, 0, annotation);
 					}
-					removed.splice(0, 0, annotation);
 				}
 			} else {
 				removed = annotations;
@@ -10394,7 +10649,7 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * 
 		 * @param {orion.editor.Annotation} annotation the annotation to be removed.
 		 * 
-		 * @see #addAnnotation
+		 * @see orion.editor.AnnotationModel#addAnnotation
 		 */
 		removeAnnotation: function(annotation) {
 			if (!annotation) { return; }
@@ -10415,8 +10670,8 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * @param {orion.editor.Annotation} remove the annotations to be removed.
 		 * @param {orion.editor.Annotation} add the annotations to be added.
 		 * 
-		 * @see #addAnnotation
-		 * @see #removeAnnotation
+		 * @see orion.editor.AnnotationModel#addAnnotation
+		 * @see orion.editor.AnnotationModel#removeAnnotation
 		 */
 		replaceAnnotations: function(remove, add) {
 			var annotations = this._annotations, i, index, annotation, removed = [];
@@ -10450,7 +10705,7 @@ define("orion/editor/annotations", ['i18n!orion/editor/nls/messages', 'orion/edi
 		 * 
 		 * @param {orion.editor.TextModel} textModel the text model.
 		 * 
-		 * @see #getTextModel
+		 * @see orion.editor.AnnotationModel#getTextModel
 		 */
 		setTextModel: function(textModel) {
 			if (this._model) {
@@ -10737,14 +10992,18 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 	'orion/editor/textView', //$NON-NLS-0$
 	'orion/editor/textModel', //$NON-NLS-0$
 	'orion/editor/projectionTextModel', //$NON-NLS-0$
+	'orion/editor/util', //$NON-NLS-0$
 	'orion/util' //$NON-NLS-0$
-], function(messages, mTextView, mTextModel, mProjectionTextModel, util) {
+], function(messages, mTextView, mTextModel, mProjectionTextModel, textUtil, util) {
 
 	/** @private */
 	function Tooltip (view) {
 		this._view = view;
+		this._fadeDelay = 500;
+		this._hideDelay = 200;
+		this._showDelay = 500;
+		this._autoHideDelay = 5000;
 		this._create(view.getOptions("parent").ownerDocument); //$NON-NLS-0$
-		view.addEventListener("Destroy", this, this.destroy); //$NON-NLS-0$
 	}
 	Tooltip.getTooltip = function(view) {
 		if (!view._tooltip) {
@@ -10756,13 +11015,50 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		_create: function(document) {
 			if (this._tooltipDiv) { return; }
 			var tooltipDiv = this._tooltipDiv = util.createElement(document, "div"); //$NON-NLS-0$
+			tooltipDiv.tabIndex = 0;
 			tooltipDiv.className = "textviewTooltip"; //$NON-NLS-0$
 			tooltipDiv.setAttribute("aria-live", "assertive"); //$NON-NLS-1$ //$NON-NLS-0$
 			tooltipDiv.setAttribute("aria-atomic", "true"); //$NON-NLS-1$ //$NON-NLS-0$
 			var tooltipContents = this._tooltipContents = util.createElement(document, "div"); //$NON-NLS-0$
 			tooltipDiv.appendChild(tooltipContents);
 			document.body.appendChild(tooltipDiv);
-			this.hide();
+			var self = this;
+			textUtil.addEventListener(tooltipDiv, "mouseover", function(event) { //$NON-NLS-0$
+				if (!self._hideDelay) { return; }
+				var window = self._getWindow();
+				if (self._delayedHideTimeout) {
+					window.clearTimeout(self._delayedHideTimeout);
+					self._delayedHideTimeout = null;
+				}
+				
+				if (self._hideTimeout) {
+					window.clearTimeout(self._hideTimeout);
+					self._hideTimeout = null;
+				}
+				self._nextTarget = null;
+			}, false);
+			textUtil.addEventListener(tooltipDiv, "mouseout", function(event) { //$NON-NLS-0$
+				var relatedTarget = event.relatedTarget || event.toElement;
+				if (relatedTarget === tooltipDiv || self._hasFocus()) { return; }
+				if (relatedTarget) {
+					if (textUtil.contains(tooltipDiv, relatedTarget)) { return; }
+				}
+				self._hide();
+			}, false);
+			textUtil.addEventListener(tooltipDiv, "keydown", function(event) { //$NON-NLS-0$
+				if (event.keyCode === 27) {
+					self._hide();
+				}
+			}, false);
+			textUtil.addEventListener(document, "mousedown", this._mouseDownHandler = function(event) { //$NON-NLS-0$
+				if (!self.isVisible()) { return; }
+				if (textUtil.contains(tooltipDiv, event.target || event.srcElement)) { return; }
+				self._hide();
+			}, true);
+			this._view.addEventListener("Destroy", function() { //$NON-NLS-0$
+				self.destroy();
+			});
+			this._hide();
 		},
 		_getWindow: function() {
 			var document = this._tooltipDiv.ownerDocument;
@@ -10770,12 +11066,46 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		},
 		destroy: function() {
 			if (!this._tooltipDiv) { return; }
-			this.hide();
+			this._hide();
 			var parent = this._tooltipDiv.parentNode;
 			if (parent) { parent.removeChild(this._tooltipDiv); }
+			var document = this._tooltipDiv.ownerDocument;
+			textUtil.removeEventListener(document, "mousedown", this._mouseDownHandler, true); //$NON-NLS-0$
 			this._tooltipDiv = null;
 		},
-		hide: function() {
+		_hasFocus: function() {
+			var tooltipDiv = this._tooltipDiv;
+			if (!tooltipDiv) { return false; }
+			var document = tooltipDiv.ownerDocument;
+			return textUtil.contains(tooltipDiv, document.activeElement);
+		},
+		hide: function(hideDelay) {
+			if (hideDelay === undefined) {
+				hideDelay = this._hideDelay;
+			}
+			var window = this._getWindow();
+			if (this._delayedHideTimeout) {
+				window.clearTimeout(this._delayedHideTimeout);
+				this._delayedHideTimeout = null;
+			}
+			var self = this;
+			if (!hideDelay) {
+				self._hide();
+				self.setTarget(self._nextTarget, 0);
+			} else {
+				self._delayedHideTimeout = window.setTimeout(function() {
+					self._delayedHideTimeout = null;
+					self._hide();
+					self.setTarget(self._nextTarget, 0);
+				}, hideDelay);
+			}
+		},
+		_hide: function() {
+			var tooltipDiv = this._tooltipDiv;
+			if (!tooltipDiv) { return; }
+			if (this._hasFocus()) {
+				this._view.focus();
+			}
 			if (this._contentsView) {
 				this._contentsView.destroy();
 				this._contentsView = null;
@@ -10783,13 +11113,15 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			if (this._tooltipContents) {
 				this._tooltipContents.innerHTML = "";
 			}
-			if (this._tooltipDiv) {
-				this._tooltipDiv.style.visibility = "hidden"; //$NON-NLS-0$
-			}
+			tooltipDiv.style.visibility = "hidden"; //$NON-NLS-0$
 			var window = this._getWindow();
 			if (this._showTimeout) {
 				window.clearTimeout(this._showTimeout);
 				this._showTimeout = null;
+			}
+			if (this._delayedHideTimeout) {
+				window.clearTimeout(this._delayedHideTimeout);
+				this._delayedHideTimeout = null;
 			}
 			if (this._hideTimeout) {
 				window.clearTimeout(this._hideTimeout);
@@ -10803,20 +11135,29 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 		isVisible: function() {
 			return this._tooltipDiv && this._tooltipDiv.style.visibility === "visible"; //$NON-NLS-0$
 		},
-		setTarget: function(target, delay) {
-			if (this.target === target) { return; }
-			this._target = target;
-			this.hide();
-			if (target) {
-				var self = this;
-				if(delay === 0) {
-					self.show(true);
-				}
-				else {
-				var window = this._getWindow();
-					self._showTimeout = window.setTimeout(function() {
+		setTarget: function(target, delay, hideDelay) {
+			var visible = this.isVisible();
+			if (visible) {
+				if (this._hasFocus()) { return; }
+				this._nextTarget = target;
+				this.hide(hideDelay);
+			} else {
+				this._target = target;
+				if (target) {
+					var self = this;
+					var window = self._getWindow();
+					if (self._showTimeout) {
+						window.clearTimeout(self._showTimeout);
+						self._showTimeout = null;
+					}
+					if (delay === 0) {
 						self.show(true);
-					}, delay ? delay : 500);
+					} else {
+						self._showTimeout = window.setTimeout(function() {
+							self._showTimeout = null;
+							self.show(true);
+						}, delay ? delay : self._showDelay);
+					}
 				}
 			}
 		},
@@ -10851,8 +11192,6 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 				}
 				options.themeClass = theme;
 				var contentsView = this._contentsView = new mTextView.TextView(options);
-				//TODO this is need to avoid Firefox from getting focus
-				contentsView._clientDiv.contentEditable = false;
 				//TODO need to find a better way of sharing the styler for multiple views
 				var listener = {
 					onLineStyle: function(e) {
@@ -10891,6 +11230,7 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 				var self = this;
 				var window = this._getWindow();
 				self._hideTimeout = window.setTimeout(function() {
+					self._hideTimeout = null;
 					var opacity = parseFloat(self._getNodeStyle(tooltipDiv, "opacity", "1")); //$NON-NLS-1$ //$NON-NLS-0$
 					self._fadeTimeout = window.setInterval(function() {
 						if (tooltipDiv.style.visibility === "visible" && opacity > 0) { //$NON-NLS-0$
@@ -10898,16 +11238,29 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 							tooltipDiv.style.opacity = opacity;
 							return;
 						}
-						self.hide();
-					}, 50);
-				}, 5000);
+						self._hide();
+					}, self._fadeDelay / 10);
+				}, self._autoHideDelay);
 			}
 		},
 		_getAnnotationContents: function(annotations) {
+			var annotation;
+			var newAnnotations = [];
+			for (var j = 0; j < annotations.length; j++) {
+				annotation = annotations[j];
+				if (annotation.title !== "" && !annotation.groupAnnotation) { 
+					newAnnotations.push(annotation); 
+				}
+			}
+			annotations = newAnnotations;
 			if (annotations.length === 0) {
 				return null;
 			}
-			var model = this._view.getModel(), annotation;
+			var self = this;
+			var html;
+			var document = this._tooltipDiv.ownerDocument;
+			var view = this._view;
+			var model = view.getModel();
 			var baseModel = model.getBaseModel ? model.getBaseModel() : model;
 			function getText(start, end) {
 				var textStart = baseModel.getLineStart(baseModel.getLineAtOffset(start));
@@ -10916,22 +11269,48 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 			}
 			function getAnnotationHTML(annotation) {
 				var title = annotation.title;
-				if (title === "") { return null; }
-				var result = "<div>"; //$NON-NLS-0$
+				var result = util.createElement(document, "div"); //$NON-NLS-0$
+				result.className = "tooltipRow"; //$NON-NLS-0$
 				if (annotation.html) {
-					result += annotation.html + "&nbsp;"; //$NON-NLS-0$
+					result.innerHTML = annotation.html;
+					if (result.lastChild) {
+						textUtil.addEventListener(result.lastChild, "click", function(event) { //$NON-NLS-0$
+							var start = annotation.start, end = annotation.end;
+							if (model.getBaseModel) {
+								start = model.mapOffset(start, true);
+								end = model.mapOffset(end, true);
+							}
+							view.setSelection(start, end, 1 / 3, function() { self._hide(); });
+						}, false);
+					}
+					result.appendChild(document.createTextNode("\u00A0")); //$NON-NLS-0$
 				}
 				if (!title) {
 					title = getText(annotation.start, annotation.end);
 				}
-				title = title.replace(/</g, "&lt;").replace(/>/g, "&gt;"); //$NON-NLS-1$ //$NON-NLS-0$
-				result += "<span style='vertical-align:middle;'>" + title + "</span><div>"; //$NON-NLS-1$ //$NON-NLS-0$
+				if (typeof title === "function") { //$NON-NLS-0$
+					title = annotation.title();
+				}
+				if (typeof title === "string") { //$NON-NLS-0$
+					var span = util.createElement(document, "span"); //$NON-NLS-0$
+//					span.className = "tooltipTitle"; //$NON-NLS-0$
+					span.appendChild(document.createTextNode(title));
+					title = span;
+				}
+				result.appendChild(title);
 				return result;
 			}
 			if (annotations.length === 1) {
 				annotation = annotations[0];
 				if (annotation.title !== undefined) {
-					return getAnnotationHTML(annotation);
+					html = getAnnotationHTML(annotation);
+					if (html.firstChild) {
+						var className = html.firstChild.className;
+						if (className) { className += " "; } //$NON-NLS-0$
+						className += "single"; //$NON-NLS-0$
+						html.firstChild.className = className;
+					}
+					return html;
 				} else {
 					var newModel = new mProjectionTextModel.ProjectionTextModel(baseModel);
 					var lineStart = baseModel.getLineStart(baseModel.getLineAtOffset(annotation.start));
@@ -10945,12 +11324,15 @@ define("orion/editor/tooltip", [ //$NON-NLS-0$
 					return newModel;
 				}
 			} else {
-				var tooltipHTML = "<div><em>" + messages.multipleAnnotations + "</em></div>"; //$NON-NLS-1$ //$NON-NLS-0$
+				var tooltipHTML = util.createElement(document, "div"); //$NON-NLS-0$
+				var em = util.createElement(document, "em"); //$NON-NLS-0$
+				em.appendChild(document.createTextNode(messages.multipleAnnotations));
+				tooltipHTML.appendChild(em);
 				for (var i = 0; i < annotations.length; i++) {
 					annotation = annotations[i];
-					var html = getAnnotationHTML(annotation);
+					html = getAnnotationHTML(annotation);
 					if (html) {
-						tooltipHTML += html;
+						tooltipHTML.appendChild(html);
 					}
 				}
 				return tooltipHTML;
@@ -11108,7 +11490,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @returns {orion.editor.AnnotationModel} the ruler annotation model.
 		 *
-		 * @see #setAnnotationModel
+		 * @see orion.editor.Ruler#setAnnotationModel
 		 */
 		getAnnotationModel: function() {
 			return this._annotationModel;
@@ -11118,7 +11500,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @returns {String} the ruler location, which is either "left" or "right".
 		 *
-		 * @see #getOverview
+		 * @see orion.editor.Ruler#getOverview
 		 */
 		getLocation: function() {
 			return this._location;
@@ -11128,7 +11510,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @returns {String} the overview type, which is either "page" or "document".
 		 *
-		 * @see #getLocation
+		 * @see orion.editor.Ruler#getLocation
 		 */
 		getOverview: function() {
 			return this._overview;
@@ -11146,7 +11528,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @returns {orion.editor.TextView} the text view.
 		 *
-		 * @see #setView
+		 * @see orion.editor.Ruler#setView
 		 */
 		getView: function() {
 			return this._view;
@@ -11163,7 +11545,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @returns {orion.editor.Annotation} the widest annotation.
 		 *
-		 * @see #getAnnotations
+		 * @see orion.editor.Ruler#getAnnotations
 		 */
 		getWidestAnnotation: function() {
 			return null;
@@ -11173,7 +11555,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @param {orion.editor.AnnotationModel} annotationModel the annotation model.
 		 *
-		 * @see #getAnnotationModel
+		 * @see orion.editor.Ruler#getAnnotationModel
 		 */
 		setAnnotationModel: function (annotationModel) {
 			if (this._annotationModel) {
@@ -11191,7 +11573,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @param {orion.editor.Annotation} annotation the annotation for lines with multiple annotations.
 		 * 
-		 * @see #setMultiAnnotationOverlay
+		 * @see orion.editor.Ruler#setMultiAnnotationOverlay
 		 */
 		setMultiAnnotation: function(annotation) {
 			this._multiAnnotation = annotation;
@@ -11203,7 +11585,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 *
 		 * @param {orion.editor.Annotation} annotation the annotation overlay for lines with multiple annotations.
 		 * 
-		 * @see #setMultiAnnotation
+		 * @see orion.editor.Ruler#setMultiAnnotation
 		 */
 		setMultiAnnotationOverlay: function(annotation) {
 			this._multiAnnotationOverlay = annotation;
@@ -11238,15 +11620,14 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 			var view = this._view;
 			var model = view.getModel();
 			var baseModel = model;
-			var start = model.getLineStart(lineIndex);
+			var start = model.getLineStart(lineIndex), lineStart = start;
 			var end = start;
 			var annotationModel = this._annotationModel;
 			if (annotationModel) {
 				var selection = view.getSelection();
-				var offset = Math.max(selection.start, selection.end);
 				end = model.getLineEnd(lineIndex, true);
-				if (start <= offset && offset < model.getLineEnd(lineIndex)) {
-					start = offset + 1;
+				if (start <= selection.start && selection.start < end) {
+					start = selection.start;
 				}
 				if (model.getBaseModel) {
 					start = model.mapOffset(start);
@@ -11254,16 +11635,27 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 					baseModel = model.getBaseModel();
 				}
 				var annotation, iter = annotationModel.getAnnotations(start, end);
+				var clickedAnnotation = null;
 				while (!annotation && iter.hasNext()) {
 					var a = iter.next();
 					if (!this.isAnnotationTypeVisible(a.type)) { continue; }
-					annotation = a;
+					clickedAnnotation = a;
+					if (a.start <= start) { continue; }
+					annotation = a; 
 				}
+				if (clickedAnnotation && clickedAnnotation.groupId !== undefined) {
+					if (this._currentClickGroup === clickedAnnotation.groupId) {
+						this._currentClickGroup = null;
+					} else {
+						this._currentClickGroup = clickedAnnotation.groupId;
+					}
+					this._setCurrentGroup(lineIndex);
+				} 
 				if (annotation && baseModel.getLineAtOffset(annotation.start) === baseModel.getLineAtOffset(start)) {
 					start = annotation.start;
 					end = annotation.end;
 				} else {
-					end = start;
+					end = start = lineStart;
 				}
 				
 				if (model.getBaseModel) {
@@ -11315,6 +11707,9 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 */
 		onMouseOver: function(lineIndex, e) {
 			this.onMouseMove(lineIndex, e);
+			if (!this._currentClickGroup) {
+				this._setCurrentGroup(lineIndex);
+			}
 		},
 		/**
 		 * This event is sent when the mouse pointer exits a line annotation.
@@ -11324,6 +11719,9 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		 * @param {DOMEvent} e the mouse out event.
 		 */
 		onMouseOut: function(lineIndex, e) {
+			if (!this._currentClickGroup) {
+				this._setCurrentGroup(-1);
+			}
 			var tooltip = mTooltip.Tooltip.getTooltip(this._view);
 			if (!tooltip) { return; }
 			tooltip.setTarget(null);
@@ -11430,7 +11828,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 				if (style.style) {
 					if (!result.style) { result.style  = {}; }
 					for (prop in style.style) {
-						if (!result.style[prop]) {
+						if (result.style[prop] === undefined) {
 							result.style[prop] = style.style[prop];
 						}
 					}
@@ -11438,13 +11836,64 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 				if (style.attributes) {
 					if (!result.attributes) { result.attributes  = {}; }
 					for (prop in style.attributes) {
-						if (!result.attributes[prop]) {
+						if (result.attributes[prop] === undefined) {
 							result.attributes[prop] = style.attributes[prop];
 						}
 					}
 				}
 			}
 			return result;
+		},
+		_setCurrentGroup: function(lineIndex) {
+			var annotationModel = this._annotationModel;
+			var groupAnnotation = null;
+			var model = annotationModel.getTextModel();
+			var annotation;
+			var annotations;
+			var currentGroupAnnotation = this._currentGroupAnnotation;
+			if (lineIndex !== -1) {
+				var start = model.getLineStart(lineIndex);
+				var end = model.getLineEnd(lineIndex);
+				if (model.getBaseModel) {
+					start = model.mapOffset(start);
+					end = model.mapOffset(end);
+				}
+				annotations = annotationModel.getAnnotations(start, end);
+				while(annotations.hasNext()){
+					annotation = annotations.next();
+					if (!this.isAnnotationTypeVisible(annotation.type)) { continue; }
+					if (annotation.start <= start && annotation.end >= end){
+						if (annotation.groupId !== undefined) {
+							groupAnnotation = annotation;
+							break;
+						}
+					}
+				}
+				if (currentGroupAnnotation && groupAnnotation) {
+					if (currentGroupAnnotation.groupId === groupAnnotation.groupId) {
+						return;
+					}
+				}
+			}
+			this._currentGroupAnnotation = null;
+			if (currentGroupAnnotation) {
+				annotationModel.removeAnnotations(currentGroupAnnotation.groupType);
+			}
+			if (!groupAnnotation) { return; }
+			
+			if (lineIndex === -1) { return; }
+			this._currentGroupAnnotation = groupAnnotation;
+			annotations = annotationModel.getAnnotations(0, model.getCharCount());
+			var add = [];
+			while (annotations.hasNext()) {
+				annotation = annotations.next();
+				delete annotation.groupAnnotation;
+				if (annotation.groupId === groupAnnotation.groupId) {
+					annotation = annotation.createGroupAnnotation();
+					add.push(annotation);
+				}
+			}
+			annotationModel.replaceAnnotations(null, add);
 		}
 	};
 	mAnnotations.AnnotationTypeList.addMixin(Ruler.prototype);
@@ -11471,6 +11920,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		this._oddStyle = oddStyle || {style: {backgroundColor: "white"}}; //$NON-NLS-0$
 		this._evenStyle = evenStyle || {style: {backgroundColor: "white"}}; //$NON-NLS-0$
 		this._numOfDigits = 0;
+		this._firstLine = 1;
 	}
 	LineNumberRuler.prototype = new Ruler(); 
 	/** @ignore */
@@ -11485,7 +11935,7 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 				mapLine = model.getBaseModel().getLineAtOffset(model.mapOffset(lineStart));
 			}
 			if (!result[lineIndex]) { result[lineIndex] = {}; }
-			result[lineIndex].html = (mapLine + 1) + "";
+			result[lineIndex].html = (this._firstLine + mapLine) + "";
 			if (!result[lineIndex].style) { result[lineIndex].style = style; }
 		}
 		return result;
@@ -11495,12 +11945,21 @@ define("orion/editor/rulers", ['i18n!orion/editor/nls/messages', 'orion/editor/a
 		var lineCount = this._view.getModel().getLineCount();
 		return this.getAnnotations(lineCount - 1, lineCount)[lineCount - 1];
 	};
+	/**
+	 * Sets the line index displayed for the first line. The default value is
+	 * <code>1</code>.
+	 *
+	 * @param {Number} [lineIndex=1] the first line index displayed
+	 */
+	LineNumberRuler.prototype.setFirstLine = function(lineIndex) {
+		this._firstLine = lineIndex !== undefined ? lineIndex : 1;
+	};
 	/** @ignore */
 	LineNumberRuler.prototype._onTextModelChanged = function(e) {
 		var start = e.start;
 		var model = this._view.getModel();
 		var lineCount = model.getBaseModel ? model.getBaseModel().getLineCount() : model.getLineCount();
-		var numOfDigits = (lineCount+"").length;
+		var numOfDigits = ((this._firstLine + lineCount - 1)+"").length;
 		if (this._numOfDigits !== numOfDigits) {
 			this._numOfDigits = numOfDigits;
 			var startLine = model.getLineAtOffset(start);
@@ -11726,12 +12185,21 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 	 * @name orion.editor.Change
 	 * @private
 	 */
-	function Change(offset, text, previousText) {
+	function Change(offset, text, previousText, type) {
 		this.offset = offset;
 		this.text = text;
 		this.previousText = previousText;
+		this.type = type;
 	}
 	Change.prototype = {
+		/** @ignore */
+		getRedoChanges: function() {
+			return [{start: this.offset, end: this.offset + this.previousText.length, text: this.text}];
+		},
+		/** @ignore */
+		getUndoChanges: function() {
+			return [{start: this.offset, end: this.offset + this.text.length, text: this.previousText}];
+		},
 		/** @ignore */
 		undo: function (view, select) {
 			this._doUndoRedo(this.offset, this.previousText, this.text, view, select);
@@ -11741,6 +12209,22 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		redo: function (view, select) {
 			this._doUndoRedo(this.offset, this.text, this.previousText, view, select);
 			return true;
+		},
+		merge: function(start, text, previousText, type, end) {
+			if (type === this.type) {
+				if (type === 1 && start === this.offset + this.text.length) {
+					this.text += text;
+					return true;
+				} else if (type === -1 && end === this.offset) {
+					this.offset = start;
+					this.previousText = previousText + this.previousText;
+					return true;
+				} else if (type === -1 && start === this.offset) {
+					this.previousText = this.previousText + previousText;
+					return true;
+				}
+			}
+			return false;
 		},
 		_doUndoRedo: function(offset, text, previousText, view, select) {
 			var model = view.getModel();
@@ -11787,6 +12271,22 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		this.changes = [];
 	}
 	CompoundChange.prototype = {
+		/** @ignore */
+		getRedoChanges: function() {
+			var changes = [];
+			for (var i=0; i<this.changes.length; i++) {
+				changes = changes.concat(this.changes[i].getRedoChanges());
+			}
+			return changes;
+		},
+		/** @ignore */
+		getUndoChanges: function() {
+			var changes = [];
+			for (var i=this.changes.length - 1; i >= 0; i--) {
+				changes = changes.concat(this.changes[i].getUndoChanges());
+			}
+			return changes;
+		},
 		/** @ignore */
 		add: function (change) {
 			this.changes.push(change);
@@ -11843,6 +12343,13 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 				owner.redo();
 			}
 			return this.changes.length > 0;
+		},
+		merge: function(start, text, previousText, type, end) {
+			var length = this.changes.length;
+			if (length > 0) {
+				return this.changes[length - 1].merge(start, text, previousText, type, end);
+			}
+			return false;
 		},
 		/** @ignore */
 		start: function (view) {
@@ -11907,7 +12414,6 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 				if (this.stack.length > this.size) {
 					this.stack.shift();
 					this.index--;
-					this.cleanIndex--;
 				}
 			}
 		},
@@ -11918,12 +12424,14 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		 * This function is typically called when the content of view associated with the stack is saved.
 		 * </p>
 		 *
-		 * @see #isClean
+		 * @see orion.editor.UndoStack#isClean
 		 */
 		markClean: function() {
-			this.endCompoundChange();
 			this._commitUndo();
-			this.cleanIndex = this.index;
+			this.cleanChange = this.stack[this.index - 1];
+			if (this.cleanChange) {
+				this.cleanChange.type = 2;
+			}
 		},
 		/**
 		 * Returns true if current state of stack is the same
@@ -11940,37 +12448,37 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		 *
 		 * @return {Boolean} returns if the state is the same as the state when markClean() was called.
 		 *
-		 * @see #markClean
+		 * @see orion.editor.UndoStack#markClean
 		 */
 		isClean: function() {
-			return this.cleanIndex === this.getSize().undo;
+			return this.cleanChange === this.stack[this.index - 1];
 		},
 		/**
 		 * Returns true if there is at least one change to undo.
 		 *
 		 * @return {Boolean} returns true if there is at least one change to undo.
 		 *
-		 * @see #canRedo
-		 * @see #undo
+		 * @see orion.editor.UndoStack#canRedo
+		 * @see orion.editor.UndoStack#undo
 		 */
 		canUndo: function() {
-			return this.getSize().undo > 0;
+			return this.index > 0;
 		},
 		/**
 		 * Returns true if there is at least one change to redo.
 		 *
 		 * @return {Boolean} returns true if there is at least one change to redo.
 		 *
-		 * @see #canUndo
-		 * @see #redo
+		 * @see orion.editor.UndoStack#canUndo
+		 * @see orion.editor.UndoStack#redo
 		 */
 		canRedo: function() {
-			return this.getSize().redo > 0;
+			return (this.stack.length - this.index) > 0;
 		},
 		/**
 		 * Finishes a compound change.
 		 *
-		 * @see #startCompoundChange
+		 * @see orion.editor.UndoStack#startCompoundChange
 		 */
 		endCompoundChange: function() {
 			if (this.compoundChange) {
@@ -11984,24 +12492,68 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		 * @return {object} a object where object.undo is the number of changes that can be un-done, 
 		 *  and object.redo is the number of changes that can be re-done.
 		 *
-		 * @see #canUndo
-		 * @see #canRedo
+		 * @see orion.editor.UndoStack#canUndo
+		 * @see orion.editor.UndoStack#canRedo
 		 */
 		getSize: function() {
-			var index = this.index;
-			var length = this.stack.length;
-			if (this._undoStart !== undefined) {
-				index++;
+			return {
+				undo: this.index,
+				redo: this.stack.length - this.index
+			};
+		},
+		/**
+		 * @class This object represents a text change.
+		 * <p>
+		 * <b>See:</b><br/>
+		 * {@link orion.editor.UndoStack}<br/>
+		 * {@link orion.editor.UndoStack#getUndoChanges}<br/>
+		 * {@link orion.editor.UndoStack#getRedoChanges}<br/>
+		 * </p>
+		 * @name orion.editor.TextChange
+		 * 
+		 * @property {Number} start The start offset in the model of the range to be replaced.
+		 * @property {Number} end The end offset in the model of the range to be replaced
+		 * @property {String} text the text to be inserted
+		 */
+		/**
+		 * Returns the redo changes.
+		 *
+		 * @return {orion.editor.TextChange[]} an array of TextChanges that are returned in the order
+		 * that they occurred (most recent change last).
+		 *
+		 * @see orion.editor.UndoStack#getUndoChanges
+		 */
+		getRedoChanges: function() {
+			this._commitUndo();
+			var changes = [];
+			for (var i=this.index; i<this.stack.length; i++) {
+				changes = changes.concat(this.stack[i].getRedoChanges());
 			}
-			return {undo: index, redo: (length - index)};
+			return changes;
+		},
+		/**
+		 * Returns the undo changes.
+		 *
+		 * @return {orion.editor.TextChange[]} an array of TextChanges that are returned in the reverse order
+		 * that they occurred (most recent change first).
+		 *
+		 * @see orion.editor.UndoStack#getRedoChanges
+		 */
+		getUndoChanges: function() {
+			this._commitUndo();
+			var changes = [];
+			for (var i=this.index; i >= 0; i--) {
+				changes = changes.concat(this.stack[i].getUndoChanges());
+			}
+			return changes;
 		},
 		/**
 		 * Undo the last change in the stack.
 		 *
 		 * @return {Boolean} returns true if a change was un-done.
 		 *
-		 * @see #redo
-		 * @see #canUndo
+		 * @see orion.editor.UndoStack#redo
+		 * @see orion.editor.UndoStack#canUndo
 		 */
 		undo: function() {
 			this._commitUndo();
@@ -12021,8 +12573,8 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		 *
 		 * @return {Boolean} returns true if a change was re-done.
 		 *
-		 * @see #undo
-		 * @see #canRedo
+		 * @see orion.editor.UndoStack#undo
+		 * @see orion.editor.UndoStack#canRedo
 		 */
 		redo: function() {
 			this._commitUndo();
@@ -12041,11 +12593,9 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		 * Reset the stack to its original state. All changes in the stack are thrown away.
 		 */
 		reset: function() {
-			this.index = this.cleanIndex = 0;
+			this.index = 0;
+			this.cleanChange = undefined;
 			this.stack = [];
-			this._undoStart = undefined;
-			this._undoText = "";
-			this._undoType = 0;
 			this._ignoreUndo = false;
 			this._compoundChange = undefined;
 		},
@@ -12061,7 +12611,7 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 		 *		 
 		 * @return the compound change
 		 *
-		 * @see #endCompoundChange
+		 * @see orion.editor.UndoStack#endCompoundChange
 		 */
 		startCompoundChange: function(owner) {
 			this._commitUndo();
@@ -12072,16 +12622,6 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 			return this.compoundChange;
 		},
 		_commitUndo: function () {
-			if (this._undoStart !== undefined) {
-				if (this._undoType === -1) {
-					this.add(new Change(this._undoStart, "", this._undoText));
-				} else {
-					this.add(new Change(this._undoStart, this._undoText, ""));
-				}
-				this._undoStart = undefined;
-				this._undoText = "";
-				this._undoType = 0;
-			}
 			this.endCompoundChange();
 		},
 		_onDestroy: function(evt) {
@@ -12089,40 +12629,29 @@ define("orion/editor/undoStack", [], function() { //$NON-NLS-0$
 			this.view.removeEventListener("Destroy", this._listener.onDestroy); //$NON-NLS-0$
 		},
 		_onChanging: function(e) {
-			var newText = e.text;
-			var start = e.start;
-			var removedCharCount = e.removedCharCount;
-			var addedCharCount = e.addedCharCount;
 			if (this._ignoreUndo) {
 				return;
 			}
-			if (this._undoStart !== undefined && 
-				!((addedCharCount === 1 && removedCharCount === 0 && this._undoType === 1 && start === this._undoStart + this._undoText.length) ||
-					(addedCharCount === 0 && removedCharCount === 1 && this._undoType === -1 && (((start + 1) === this._undoStart) || (start === this._undoStart)))))
-			{
-				this._commitUndo();
+			var text = e.text;
+			var start = e.start;
+			var addedCharCount = e.addedCharCount;
+			var removedCharCount = e.removedCharCount;
+			var end = start + removedCharCount;
+			var type = 0;
+			if (addedCharCount === 0 && removedCharCount === 1) {
+				type = -1;
+			} else if (addedCharCount === 1 && removedCharCount === 0) {
+				type = 1;
 			}
-			if (!this.compoundChange) {
-				if (addedCharCount === 1 && removedCharCount === 0) {
-					if (this._undoStart === undefined) {
-						this._undoStart = start;
-					}
-					this._undoText = this._undoText + newText;
-					this._undoType = 1;
-					return;
-				} else if (addedCharCount === 0 && removedCharCount === 1) {
-					var deleting = this._undoText.length > 0 && this._undoStart === start;
-					this._undoStart = start;
-					this._undoType = -1;
-					if (deleting) {
-						this._undoText = this._undoText + this.model.getText(start, start + removedCharCount);
-					} else {
-						this._undoText = this.model.getText(start, start + removedCharCount) + this._undoText;
-					}
+			var length = this.stack.length;
+			var previousText = this.model.getText(start, end);
+			if (length > 0 && this.index === length) {
+				var change = this.stack[length - 1];
+				if (change.merge(start, text, previousText, type, end)) {
 					return;
 				}
 			}
-			this.add(new Change(start, newText, this.model.getText(start, start + removedCharCount)));
+			this.add(new Change(start, text, previousText, type));
 		}
 	};
 	
@@ -12285,11 +12814,30 @@ define("orion/editor/textDND", [], function() { //$NON-NLS-0$
  * Contributors: IBM Corporation - initial API and implementation
  ******************************************************************************/
  
- /*global define*/
- /*jslint maxerr:150 browser:true devel:true laxbreak:true regexp:false*/
+/*global define*/
 
-define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBinding', 'orion/editor/eventTarget', 'orion/editor/tooltip', 'orion/editor/annotations', 'orion/util'], function(messages, mKeyBinding, mEventTarget, mTooltip, mAnnotations, util) { //$NON-NLS-6$ //$NON-NLS-5$ //$NON-NLS-4$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+define("orion/editor/editor", [ //$NON-NLS-0$
+	'i18n!orion/editor/nls/messages', //$NON-NLS-0$
+	'orion/editor/eventTarget', //$NON-NLS-0$
+	'orion/editor/tooltip', //$NON-NLS-0$
+	'orion/editor/annotations', //$NON-NLS-0$
+	'orion/util' //$NON-NLS-0$
+], function(messages, mEventTarget, mTooltip, mAnnotations, util) {
+
+	/**	@private */
+	function merge(obj1, obj2) {
+		if (obj2) {
+			for (var p in obj2) {
+				if (obj2.hasOwnProperty(p)) {
+					obj1[p] = obj2[p];
+				}
+			}
+		}
+		return obj1;
+	}
 		
+	var AT = mAnnotations.AnnotationType;
+
 	var HIGHLIGHT_ERROR_ANNOTATION = "orion.annotation.highlightError"; //$NON-NLS-0$
 
 	/**
@@ -12379,6 +12927,14 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 			return this._annotationStyler;
 		},
 		/**
+		 * Returns the content assist of the editor. 
+		 *
+		 * @returns {orion.editor.LineNumberRuler}
+		 */
+		getContentAssist: function() {
+			return this._contentAssist;
+		},
+		/**
 		 * Returns the folding ruler of the editor. 
 		 *
 		 * @returns {orion.editor.FoldingRuler}
@@ -12429,16 +12985,54 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		getTitle: function() {
 			return this._title;
 		},
-		
+		/**
+		 * Returns the editor undo stack. 
+		 *
+		 * @returns {orion.editor.UndoStack} the editor undo stack.
+		 */
+		getUndoStack: function() {
+			return this._undoStack;
+		},
 		/**
 		 * Returns the editor's key modes.
 		 *
 		 * @returns {Array} the editor key modes.
 		 */
 		getKeyModes: function() {
-			return  this._textView.getKeyModes();
+			return this._textView.getKeyModes();
 		},
-		
+		/**
+		 * Returns the editor source code actions.
+		 *
+		 * @returns {orion.editor.sourceCodeActions}
+		 */
+		getSourceCodeActions: function() {
+			return this._sourceCodeActions;
+		},
+		/**
+		 * Returns the editor linked mode.
+		 *
+		 * @returns {orion.editor.LinkedMode}
+		 */
+		getLinkedMode: function() {
+			return this._linkedMode;
+		},
+		/**
+		 * Returns the editor text actions.
+		 *
+		 * @returns {orion.editor.textActions}
+		 */
+		getTextActions: function() {
+			return this._textActions;
+		},
+		/**
+		 * Gives focus to the text view.
+		 */
+		focus: function() {
+			if (this._textView) {
+				this._textView.focus();
+			}
+		},
 		/**
 		 * Returns <code>true</code> if the editor is dirty; <code>false</code> otherwise.
 		 * @returns {Boolean} 
@@ -12451,8 +13045,8 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		 *
 		 * @param {Boolean} visible <code>true</code> to show ruler, <code>false</code> otherwise
 		 */
-		setAnnotationRulerVisible: function(visible) {
-			if (this._annotationRulerVisible === visible) { return; }
+		setAnnotationRulerVisible: function(visible, force) {
+			if (this._annotationRulerVisible === visible && !force) { return; }
 			this._annotationRulerVisible = visible;
 			if (!this._annotationRuler) { return; }
 			var textView = this._textView;
@@ -12467,14 +13061,14 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		 *
 		 * @param {Boolean} visible <code>true</code> to show ruler, <code>false</code> otherwise
 		 */
-		setFoldingRulerVisible: function(visible) {
-			if (this._foldingRulerVisible === visible) { return; }
+		setFoldingRulerVisible: function(visible, force) {
+			if (this._foldingRulerVisible === visible && !force) { return; }
 			this._foldingRulerVisible = visible;
 			if (!this._foldingRuler) { return; }
 			var textView = this._textView;
 			if (!textView.getModel().getBaseModel) { return; }
 			if (visible) {
-				textView.addRuler(this._foldingRuler, 100);
+				textView.addRuler(this._foldingRuler);
 			} else {
 				textView.removeRuler(this._foldingRuler);
 			}
@@ -12494,13 +13088,13 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		 *
 		 * @param {Boolean} visible <code>true</code> to show ruler, <code>false</code> otherwise
 		 */
-		setLineNumberRulerVisible: function(visible) {
-			if (this._lineNumberRulerVisible === visible) { return; }
+		setLineNumberRulerVisible: function(visible, force) {
+			if (this._lineNumberRulerVisible === visible && !force) { return; }
 			this._lineNumberRulerVisible = visible;
 			if (!this._lineNumberRuler) { return; }
 			var textView = this._textView;
 			if (visible) {
-				textView.addRuler(this._lineNumberRuler, 1);
+				textView.addRuler(this._lineNumberRuler, !this._annotationRulerVisible ? 0 : 1);
 			} else {
 				textView.removeRuler(this._lineNumberRuler);
 			}
@@ -12510,8 +13104,8 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		 *
 		 * @param {Boolean} visible <code>true</code> to show ruler, <code>false</code> otherwise
 		 */
-		setOverviewRulerVisible: function(visible) {
-			if (this._overviewRulerVisible === visible) { return; }
+		setOverviewRulerVisible: function(visible, force) {
+			if (this._overviewRulerVisible === visible && !force) { return; }
 			this._overviewRulerVisible = visible;
 			if (!this._overviewRuler) { return; }
 			var textView = this._textView;
@@ -12562,7 +13156,7 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 			var annotations = annotationModel.getAnnotations(offset, offset + 1);
 			while (annotations.hasNext()) {
 				var annotation = annotations.next();
-				if (annotation.type === mAnnotations.AnnotationType.ANNOTATION_FOLDING) {
+				if (annotation.type === AT.ANNOTATION_FOLDING) {
 					if (annotation.expand) {
 						annotation.expand();
 						annotationModel.modifyAnnotation(annotation);
@@ -12595,13 +13189,6 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 				}
 			}
 			textView.setText(text, start, end);
-		},
-		
-		/**
-		 * @deprecated use #setFoldingRulerVisible
-		 */
-		setFoldingEnabled: function(enabled) {
-			this.setFoldingRulerVisible(enabled);
 		},
 		
 		setSelection: function(start, end, show, callback) {
@@ -12683,7 +13270,8 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		_highlightCurrentLine: function(newSelection, oldSelection) {
 			var annotationModel = this._annotationModel;
 			if (!annotationModel) { return; }
-			var textView = this._textView;	
+			var textView = this._textView;
+			if (textView.getOptions("singleMode")) { return; } //$NON-NLS-0$
 			var model = textView.getModel();
 			var oldLineIndex = oldSelection ? model.getLineAtOffset(oldSelection.start) : -1;
 			var lineIndex = model.getLineAtOffset(newSelection.start);
@@ -12702,8 +13290,8 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 			var remove = annotation ? [annotation] : null;
 			var add;
 			if (newEmpty) {
-				var type = mAnnotations.AnnotationType.ANNOTATION_CURRENT_LINE;
-				annotation = mAnnotations.AnnotationType.createAnnotation(type, start, end);
+				var type = AT.ANNOTATION_CURRENT_LINE;
+				annotation = AT.createAnnotation(type, start, end);
 				add = [annotation];
 			}
 			this._currentLineAnnotation = annotation;
@@ -12714,6 +13302,8 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		 * Creates the underlying TextView and installs the editor's features.
 		 */
 		installTextView : function() {
+			if (this._textView) { return; }
+			
 			// Create textView and install optional features
 			this._textView = this._textViewFactory();
 			if (this._undoStackFactory) {
@@ -12766,7 +13356,7 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 				onScroll: function(e) {
 					var tooltip = mTooltip.Tooltip.getTooltip(textView);
 					if (!tooltip) { return; }
-					tooltip.setTarget(null);
+					tooltip.setTarget(null, 0, 0);
 				},
 				onSelection: function(e) {
 					self._updateCursorStatus();
@@ -12782,10 +13372,16 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 						
 			// Set up keybindings
 			if (this._keyBindingFactory) {
-				if (typeof this._keyBindingFactory === "function") {
-					this._keyBindingFactory(this, this.getKeyModes(), this._undoStack, this._contentAssist);
+				var keyBindings;
+				if (typeof this._keyBindingFactory === "function") { //$NON-NLS-0$
+					keyBindings = this._keyBindingFactory(this, this.getKeyModes(), this._undoStack, this._contentAssist);
 				} else {
-					this._keyBindingFactory.createKeyBindings(editor, this._undoStack, this._contentAssist);
+					keyBindings = this._keyBindingFactory.createKeyBindings(editor, this._undoStack, this._contentAssist);
+				}
+				if (keyBindings) {
+					this._textActions = keyBindings.textActions;
+					this._linkedMode = keyBindings.linkedMode;
+					this._sourceCodeActions = keyBindings.sourceCodeActions;
 				}
 			}
 
@@ -12801,7 +13397,7 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 				var bookmark = null;
 				while (annotations.hasNext()) {
 					var annotation = annotations.next();
-					if (annotation.type === mAnnotations.AnnotationType.ANNOTATION_BOOKMARK) {
+					if (annotation.type === AT.ANNOTATION_BOOKMARK) {
 						bookmark = annotation;
 						break;
 					}
@@ -12809,7 +13405,7 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 				if (bookmark) {
 					annotationModel.removeAnnotation(bookmark);
 				} else {
-					bookmark = mAnnotations.AnnotationType.createAnnotation(mAnnotations.AnnotationType.ANNOTATION_BOOKMARK, lineStart, lineEnd);
+					bookmark = AT.createAnnotation(AT.ANNOTATION_BOOKMARK, lineStart, lineEnd);
 					bookmark.title = undefined;
 					annotationModel.addAnnotation(bookmark);
 				}
@@ -12823,18 +13419,18 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 				if (this._annotationModel) {
 					var styler = this._annotationStyler = this._annotationFactory.createAnnotationStyler(textView, this._annotationModel);
 					if (styler) {
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_CURRENT_SEARCH);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_MATCHING_SEARCH);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_ERROR);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_WARNING);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_MATCHING_BRACKET);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_CURRENT_BRACKET);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_CURRENT_LINE);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_READ_OCCURRENCE);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_WRITE_OCCURRENCE);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_SELECTED_LINKED_GROUP);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_CURRENT_LINKED_GROUP);
-						styler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_LINKED_GROUP);
+						styler.addAnnotationType(AT.ANNOTATION_CURRENT_SEARCH);
+						styler.addAnnotationType(AT.ANNOTATION_MATCHING_SEARCH);
+						styler.addAnnotationType(AT.ANNOTATION_ERROR);
+						styler.addAnnotationType(AT.ANNOTATION_WARNING);
+						styler.addAnnotationType(AT.ANNOTATION_MATCHING_BRACKET);
+						styler.addAnnotationType(AT.ANNOTATION_CURRENT_BRACKET);
+						styler.addAnnotationType(AT.ANNOTATION_CURRENT_LINE);
+						styler.addAnnotationType(AT.ANNOTATION_READ_OCCURRENCE);
+						styler.addAnnotationType(AT.ANNOTATION_WRITE_OCCURRENCE);
+						styler.addAnnotationType(AT.ANNOTATION_SELECTED_LINKED_GROUP);
+						styler.addAnnotationType(AT.ANNOTATION_CURRENT_LINKED_GROUP);
+						styler.addAnnotationType(AT.ANNOTATION_LINKED_GROUP);
 						styler.addAnnotationType(HIGHLIGHT_ERROR_ANNOTATION);
 					}
 				}
@@ -12851,40 +13447,43 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 				if (ruler) {
 					ruler.onDblClick = addRemoveBookmark;
 					ruler.setMultiAnnotationOverlay({html: "<div class='annotationHTML overlay'></div>"}); //$NON-NLS-0$
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_ERROR);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_WARNING);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_TASK);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_BOOKMARK);
+					ruler.addAnnotationType(AT.ANNOTATION_ERROR);
+					ruler.addAnnotationType(AT.ANNOTATION_WARNING);
+					ruler.addAnnotationType(AT.ANNOTATION_TASK);
+					ruler.addAnnotationType(AT.ANNOTATION_BOOKMARK);
 				}
-				this.setAnnotationRulerVisible(true);
+				this.setAnnotationRulerVisible(this._annotationRulerVisible || this._annotationRulerVisible === undefined, true);
 					
 				ruler = this._overviewRuler = rulers.overviewRuler;
 				if (ruler) {
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_CURRENT_SEARCH);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_MATCHING_SEARCH);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_ERROR);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_WARNING);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_TASK);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_BOOKMARK);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_MATCHING_BRACKET);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_CURRENT_BRACKET);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_CURRENT_LINE);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_READ_OCCURRENCE);
-					ruler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_WRITE_OCCURRENCE);
+					ruler.addAnnotationType(AT.ANNOTATION_CURRENT_SEARCH);
+					ruler.addAnnotationType(AT.ANNOTATION_MATCHING_SEARCH);
+					ruler.addAnnotationType(AT.ANNOTATION_READ_OCCURRENCE);
+					ruler.addAnnotationType(AT.ANNOTATION_WRITE_OCCURRENCE);
+					ruler.addAnnotationType(AT.ANNOTATION_CURRENT_BLAME);
+					ruler.addAnnotationType(AT.ANNOTATION_ERROR);
+					ruler.addAnnotationType(AT.ANNOTATION_WARNING);
+					ruler.addAnnotationType(AT.ANNOTATION_TASK);
+					ruler.addAnnotationType(AT.ANNOTATION_BOOKMARK);
+					ruler.addAnnotationType(AT.ANNOTATION_MATCHING_BRACKET);
+					ruler.addAnnotationType(AT.ANNOTATION_CURRENT_BRACKET);
+					ruler.addAnnotationType(AT.ANNOTATION_CURRENT_LINE);
 				}
-				this.setOverviewRulerVisible(true);
+				this.setOverviewRulerVisible(this._overviewRulerVisible || this._overviewRulerVisible === undefined, true);
 			}
 			
 			if (this._lineNumberRulerFactory) {
 				this._lineNumberRuler = this._lineNumberRulerFactory.createLineNumberRuler(this._annotationModel);
+				this._lineNumberRuler.addAnnotationType(AT.ANNOTATION_CURRENT_BLAME);
+				this._lineNumberRuler.addAnnotationType(AT.ANNOTATION_BLAME);
 				this._lineNumberRuler.onDblClick = addRemoveBookmark;
-				this.setLineNumberRulerVisible(true);
+				this.setLineNumberRulerVisible(this._lineNumberRulerVisible || this._lineNumberRulerVisible === undefined, true);
 			}
 			
 			if (this._foldingRulerFactory) {
 				this._foldingRuler = this._foldingRulerFactory.createFoldingRuler(this._annotationModel);
-				this._foldingRuler.addAnnotationType(mAnnotations.AnnotationType.ANNOTATION_FOLDING);
-				this.setFoldingRulerVisible(false);
+				this._foldingRuler.addAnnotationType(AT.ANNOTATION_FOLDING);
+				this.setFoldingRulerVisible(this._foldingRulerVisible || this._foldingRulerVisible === undefined, true);
 			}
 			
 			var textViewInstalledEvent = {
@@ -12908,6 +13507,8 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 				this._annotationRuler = this._overviewRuler = this._lineNumberRuler =
 				this._foldingRuler = this._currentLineAnnotation = this._title = null;
 			this._dirty = false;
+			this._foldingRulerVisible = this._overviewRulerVisible =
+				this._lineNumberRulerVisible = this._annotationRulerVisible = undefined;
 			
 			var textViewUninstalledEvent = {
 				type: "TextViewUninstalled", //$NON-NLS-0$
@@ -12933,70 +13534,135 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 			this.reportStatus(util.formatMessage(messages.lineColumn, lineIndex + 1, offsetInLine + 1));
 		},
 		
-		showProblems: function(problems) {
+		showAnnotations: function(annotations, types, createAnnotation, getType) {
 			var annotationModel = this._annotationModel;
 			if (!annotationModel) {
 				return;
 			}
 			var remove = [], add = [];
 			var model = annotationModel.getTextModel();
-			var annotations = annotationModel.getAnnotations(0, model.getCharCount()), annotation;
-			while (annotations.hasNext()) {
-				annotation = annotations.next();
-				if (annotation.type === mAnnotations.AnnotationType.ANNOTATION_ERROR || annotation.type === mAnnotations.AnnotationType.ANNOTATION_WARNING) {
-					remove.push(annotation);
+			var iter = annotationModel.getAnnotations(0, model.getCharCount()), annotation;
+			while (iter.hasNext()) {
+				annotation = iter.next();
+				if (types.indexOf(annotation.type) !== -1) {
+					if (annotation.creatorID === this) {
+						remove.push(annotation);
+					}
 				}
 			}
-			if (problems) { 
-				for (var i = 0; i < problems.length; i++) {
-					var problem = problems[i];
-					if (problem) {
-						// escaping voodoo... we need to construct HTML that contains valid JavaScript.
-						var escapedDescription = problem.description.replace(/'/g, "&#39;").replace(/"/g, '&#34;'); //$NON-NLS-1$ //$NON-NLS-0$
-						var lineIndex = problem.line - 1;
-						var lineStart = model.getLineStart(lineIndex);
-						var severity = problem.severity;
-						var type = severity === "error" ? mAnnotations.AnnotationType.ANNOTATION_ERROR : mAnnotations.AnnotationType.ANNOTATION_WARNING; //$NON-NLS-0$
-						var start = lineStart + problem.start - 1;
-						var end = lineStart + problem.end;
-						annotation = mAnnotations.AnnotationType.createAnnotation(type, start, end, escapedDescription);
-						add.push(annotation);
+			if (annotations) { 
+				for (var i = 0; i < annotations.length; i++) {
+					annotation = annotations[i];
+					if (!annotation) { continue; }
+					if (createAnnotation) {
+						annotation = createAnnotation(annotation);
+					} else {
+						var start, end;
+						if (typeof annotation.line === "number") { //$NON-NLS-0$
+							// line/column
+							var lineIndex = annotation.line - 1;
+							var lineStart = model.getLineStart(lineIndex);
+							start = lineStart + annotation.start - 1;
+							end = lineStart + annotation.end;
+						} else {
+							// document offsets
+							start = annotation.start;
+							end = annotation.end;
+						}
+						var type = getType(annotation);
+						if (!type) { continue; }
+						annotation = AT.createAnnotation(type, start, end, annotation.description);
 					}
+					annotation.creatorID = this;
+					add.push(annotation);
+					
 				}
 			}
 			annotationModel.replaceAnnotations(remove, add);
 		},
 		
+		showProblems: function(problems) {
+			this.showAnnotations(problems, [
+				AT.ANNOTATION_ERROR,
+				AT.ANNOTATION_WARNING,
+				AT.ANNOTATION_TASK
+			], null, function(annotation) {
+				switch (annotation.severity) {
+					case "error": return AT.ANNOTATION_ERROR; //$NON-NLS-0$
+					case "warning": return AT.ANNOTATION_WARNING; //$NON-NLS-0$
+					case "task": return AT.ANNOTATION_TASK; //$NON-NLS-0$
+				}
+				return null;
+			});
+		},
+		
 		showOccurrences: function(occurrences) {
-			var annotationModel = this._annotationModel;
-			if (!annotationModel) {
-				return;
+			this.showAnnotations(occurrences, [
+				AT.ANNOTATION_READ_OCCURRENCE,
+				AT.ANNOTATION_WRITE_OCCURRENCE
+			], null, function(annotation) {
+				return annotation.readAccess ? AT.ANNOTATION_READ_OCCURRENCE : AT.ANNOTATION_WRITE_OCCURRENCE;
+			});
+		},
+		
+		showBlame : function(blameMarkers) {
+			var blameRGB = this._blameRGB;
+			var document = this.getTextView().getOptions("parent").ownerDocument; //$NON-NLS-0$
+			if (!blameRGB) {
+				var div = util.createElement(document, "div"); //$NON-NLS-0$
+				div.className = "annotation blame"; //$NON-NLS-0$
+				document.body.appendChild(div);
+				var window = document.defaultView || document.parentWindow;
+				var blameStyle = window.getComputedStyle(div);
+				var color = blameStyle.getPropertyValue("background-color"); //$NON-NLS-0$
+				div.parentNode.removeChild(div);
+				var i1 = color.indexOf("("); //$NON-NLS-0$
+				var i2 = color.indexOf(")"); //$NON-NLS-0$
+				color = color.substring(i1 + 1, i2);
+				this._blameRGB = blameRGB = color.split(",").slice(0,3); //$NON-NLS-0$
 			}
-			var remove = [], add = [];
-			var model = annotationModel.getTextModel();
-			var annotations = annotationModel.getAnnotations(0, model.getCharCount()), annotation;
-			while (annotations.hasNext()) {
-				annotation = annotations.next();
-				if (annotation.type === mAnnotations.AnnotationType.ANNOTATION_READ_OCCURRENCE || annotation.type === mAnnotations.AnnotationType.ANNOTATION_WRITE_OCCURRENCE) {
-					remove.push(annotation);
-				}
-			}
-			if (occurrences) { 
-				for (var i = 0; i < occurrences.length; i++) {
-					var occurrence = occurrences[i];
-					if (occurrence) {
-						var lineIndex = occurrence.line - 1;
-						var lineStart = model.getLineStart(lineIndex);
-						var start = lineStart + occurrence.start - 1;
-						var end = lineStart + occurrence.end;
-						var type = occurrence.readAccess === true ? mAnnotations.AnnotationType.ANNOTATION_READ_OCCURRENCE : mAnnotations.AnnotationType.ANNOTATION_WRITE_OCCURRENCE;
-						var description = occurrence.description;
-						annotation = mAnnotations.AnnotationType.createAnnotation(type, start, end, description);
-						add.push(annotation);
-					}
-				}
-			}
-			annotationModel.replaceAnnotations(remove, add);
+			var createGroup = function() {
+				var annotation = mAnnotations.AnnotationType.createAnnotation(this.groupType, this.start, this.end, this.title);
+				annotation.style = merge({}, annotation.style);
+				annotation.style.style = merge({}, annotation.style.style);
+				annotation.style.style.backgroundColor = "";
+				this.groupAnnotation = annotation;
+				annotation.blame = this.blame;
+				annotation.html = this.html;
+				return annotation;
+			};
+			var title = function() {
+				var div = util.createElement(document, "div"); //$NON-NLS-0$
+				div.className = "tooltipTitle"; //$NON-NLS-0$
+				var index = this.blame.Message.indexOf("\n"); //$NON-NLS-0$
+				if (index === -1) { index = this.blame.Message.length; }
+				var commitLink = util.createElement(document, "a"); //$NON-NLS-0$
+				commitLink.href = this.blame.CommitLink;
+				commitLink.appendChild(document.createTextNode(this.blame.Message.substring(0, index)));
+				div.appendChild(commitLink);
+				div.appendChild(util.createElement(document, "br")); //$NON-NLS-0$
+				div.appendChild(document.createTextNode(util.formatMessage(messages.committerOnTime, this.blame.AuthorName, this.blame.Time)));
+				return div;
+			};
+			var model = this.getModel();
+			this.showAnnotations(blameMarkers, [
+				AT.ANNOTATION_BLAME
+			], function (blameMarker) {
+				var start = model.getLineStart(blameMarker.Start - 1);
+				var end = model.getLineEnd(blameMarker.End - 1, true);
+				var annotation = mAnnotations.AnnotationType.createAnnotation(AT.ANNOTATION_BLAME, start, end, title);
+				var blameColor = blameRGB.slice(0);
+				blameColor.push(blameMarker.Shade);
+				annotation.style = merge({}, annotation.style);
+				annotation.style.style = merge({}, annotation.style.style);
+				annotation.style.style.backgroundColor = "rgba(" + blameColor.join() + ")"; //$NON-NLS-0$ //$NON-NLS-1$
+				annotation.groupId = blameMarker.Name;
+				annotation.groupType = AT.ANNOTATION_CURRENT_BLAME;
+				annotation.createGroupAnnotation = createGroup;
+				annotation.html = '<img class="annotationHTML blame" src="' + blameMarker.AuthorImage + '"/>'; //$NON-NLS-0$ //$NON-NLS-1$
+				annotation.blame = blameMarker;
+				return annotation;
+			});
 		},
 		
 		/**
@@ -13038,11 +13704,7 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 		setInput: function(title, message, contents, contentsSaved) {
 			this._title = title;
 			if (this._textView) {
-				if (contentsSaved) {
-					// don't reset undo stack on save, just mark it clean so that we don't lose the undo past the save
-					this._undoStack.markClean();
-					this.checkDirty();
-				} else {
+				if (!contentsSaved) {
 					if (message) {
 						this._textView.setText(message);
 					} else {
@@ -13053,9 +13715,9 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 						}
 					}
 					this._undoStack.reset();
-					this.checkDirty();
 					this._textView.focus();
 				}
+				this.checkDirty();
 			}
 			this.onInputChanged({
 				type: "InputChanged", //$NON-NLS-0$
@@ -13113,31 +13775,6 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
 	};
 	mEventTarget.EventTarget.addMixin(Editor.prototype);
 
-	/**
-	 * @private
-	 * @param context Value to be used as the returned function's <code>this</code> value.
-	 * @param [arg1, arg2, ...] Fixed argument values that will prepend any arguments passed to the returned function when it is invoked.
-	 * @returns {Function} A function that always executes this function in the given <code>context</code>.
-	 */
-	function bind(context) {
-		var fn = this,
-		    fixed = Array.prototype.slice.call(arguments, 1);
-		if (fixed.length) {
-			return function() {
-				return arguments.length
-					? fn.apply(context, fixed.concat(Array.prototype.slice.call(arguments)))
-					: fn.apply(context, fixed);
-			};
-		}
-		return function() {
-			return arguments.length ? fn.apply(context, arguments) : fn.call(context);
-		};
-	}
-
-	if (!Function.prototype.bind) {
-		Function.prototype.bind = bind;
-	}
-
 	return {
 		Editor: Editor
 	};
@@ -13161,7 +13798,7 @@ define("orion/editor/editor", ['i18n!orion/editor/nls/messages', 'orion/keyBindi
  * @class Utilities for dealing with regular expressions.
  * @description Utilities for dealing with regular expressions.
  */
-define("orion/editor/regex", [], function() {
+define("orion/regex", [], function() { //$NON-NLS-0$
 	/**
 	 * @methodOf orion.editor.regex
 	 * @static
@@ -13170,7 +13807,7 @@ define("orion/editor/regex", [], function() {
 	 * @returns {String} A copy of <code>str</code> with regex special characters escaped.
 	 */
 	function escape(str) {
-		return str.replace(/([\\$\^*\/+?\.\(\)|{}\[\]])/g, "\\$&");
+		return str.replace(/([\\$\^*\/+?\.\(\)|{}\[\]])/g, "\\$&"); //$NON-NLS-0$
 	}
 
 	/**
@@ -13213,11 +13850,39 @@ define("orion/editor/regex", [], function() {
  ******************************************************************************/
 /*global define*/
 define('orion/objects',[], function() {
+	function mixin(target/*, source..*/) {
+		for (var j = 1; j < arguments.length; j++) {
+			var source = arguments[j];
+			for (var key in source) {
+				if (source.hasOwnProperty(key)) {
+					target[key] = source[key];
+				}
+			}
+		}
+	}
+
 	/**
 	 * @name orion.objects
 	 * @class Object-oriented helpers.
 	 */
 	return {
+		/**
+		 * Creates a shallow clone of the given <code>object</code>.
+		 * @name orion.objects.clone
+		 * @function
+		 * @static
+		 * @param {Object|Array} object The object to clone. Must be a "normal" Object or Array. Other built-ins,
+		 * host objects, primitives, etc, will not work.
+		 * @returns {Object|Array} A clone of <code>object</code>.
+		 */
+		clone: function(object) {
+			if (Array.isArray(object)) {
+				return Array.prototype.slice.call(object);
+			}
+			var clone = Object.create(Object.getPrototypeOf(object));
+			mixin(clone, object);
+			return clone;
+		},
 		/**
 		 * Mixes all <code>source</code>'s own enumerable properties into <code>target</code>. Multiple source objects
 		 * can be passed as varags.
@@ -13227,15 +13892,7 @@ define('orion/objects',[], function() {
 		 * @param {Object} target
 		 * @param {Object} source
 		 */
-		mixin: function(target/**, source..*/) {
-			Array.prototype.slice.call(arguments, 1).forEach(function(source) {
-				var keys = Object.keys(source);
-				for (var i=0; i < keys.length; i++) {
-					var key = keys[i];
-					target[key] = source[key];
-				}
-			});
-		}
+		mixin: mixin
 	};
 });
 
@@ -13257,7 +13914,7 @@ define("orion/editor/find", [ //$NON-NLS-0$
 	'orion/keyBinding', //$NON-NLS-0$
 	'orion/editor/keyModes', //$NON-NLS-0$
 	'orion/editor/annotations', //$NON-NLS-0$
-	'orion/editor/regex', //$NON-NLS-0$
+	'orion/regex', //$NON-NLS-0$
 	'orion/objects', //$NON-NLS-0$
 	'orion/util' //$NON-NLS-0$
 ], function(messages, mKeyBinding, mKeyModes, mAnnotations, mRegex, objects, util) {
@@ -13518,8 +14175,11 @@ define("orion/editor/find", [ //$NON-NLS-0$
 				}
 			}
 			this._removeAllAnnotations();
-			this._editor.getTextView().removeEventListener("Focus", this._listeners.onEditorFocus); //$NON-NLS-0$
-			this._editor.getTextView().focus();
+			var textView = this._editor.getTextView();
+			if (textView) {
+				textView.removeEventListener("Focus", this._listeners.onEditorFocus); //$NON-NLS-0$
+				textView.focus();
+			}
 		},
 		isVisible: function() {
 			return this._visible;
@@ -13563,7 +14223,9 @@ define("orion/editor/find", [ //$NON-NLS-0$
 					var startPos = 0;
 					var count = 0, lastResult;
 					while (true) {
-						var result = self._doFind(string, startPos);
+						//For replace all, we need to ignore the wrap search from the user option
+						//Otherwise the loop will be dead, see https://bugs.eclipse.org/bugs/show_bug.cgi?id=411813
+						var result = self._doFind(string, startPos, null, true);
 						if (!result) {
 							break;
 						}
@@ -13677,7 +14339,7 @@ define("orion/editor/find", [ //$NON-NLS-0$
 				this._undoStack.endCompoundChange();
 			}
 		},
-		_doFind: function(string, startOffset, count) {
+		_doFind: function(string, startOffset, count, noWrap) {
 			count = count || 1;
 			var editor = this._editor;
 			if (!string) {
@@ -13690,7 +14352,7 @@ define("orion/editor/find", [ //$NON-NLS-0$
 				start: startOffset,
 				end: this._end,
 				reverse: this._reverse,
-				wrap: this._wrap,
+				wrap: (noWrap ? false: this._wrap),
 				regex: this._regex,
 				wholeWord: this._wholeWord,
 				caseInsensitive: this._caseInsensitive
@@ -13797,10 +14459,10 @@ define("orion/editor/find", [ //$NON-NLS-0$
 /*******************************************************************************
  * @license
  * Copyright (c) 2013 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials are made 
- * available under the terms of the Eclipse Public License v1.0 
- * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
- * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v1.0
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html).
  *
  * Contributors:
  *     IBM Corporation - initial API and implementation
@@ -13829,10 +14491,11 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 		this._lastEditLocation = null;
 		this.init();
 	}
+
 	TextActions.prototype = {
 		init: function() {
 			var textView = this.editor.getTextView();
-			
+
 			this._lastEditListener = {
 				onModelChanged: function(e) {
 					if (this.editor.isDirty()) {
@@ -13841,7 +14504,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				}.bind(this)
 			};
 			textView.addEventListener("ModelChanged", this._lastEditListener.onModelChanged); //$NON-NLS-0$
-			
+
 			textView.setAction("undo", function() { //$NON-NLS-0$
 				if (this.undoStack) {
 					this.undoStack.undo();
@@ -13849,7 +14512,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				}
 				return false;
 			}.bind(this), {name: messages.undo});
-			
+
 			textView.setAction("redo", function() { //$NON-NLS-0$
 				if (this.undoStack) {
 					this.undoStack.redo();
@@ -13857,7 +14520,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				}
 				return false;
 			}.bind(this), {name: messages.redo});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("f", true), "find"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("find", function() { //$NON-NLS-0$
 				if (this._find) {
@@ -13868,7 +14531,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 					}
 				}
 			}.bind(this), {name: messages.find});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("k", true), "findNext"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("findNext", function(options) { //$NON-NLS-0$
 				if (this._find){
@@ -13877,7 +14540,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				}
 				return false;
 			}.bind(this), {name: messages.findNext});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("k", true, true), "findPrevious"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("findPrevious", function(options) { //$NON-NLS-0$
 				if (this._find){
@@ -13886,7 +14549,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				}
 				return false;
 			}.bind(this), {name: messages.findPrevious});
-	
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("j", true), "incrementalFind"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("incrementalFind", function() { //$NON-NLS-0$
 				if (this._incrementalFind) {
@@ -13906,71 +14569,71 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			textView.setAction("tab", function() { //$NON-NLS-0$
 				return this.indentLines();
 			}.bind(this));
-	
+
 			textView.setAction("shiftTab", function() { //$NON-NLS-0$
 				return this.unindentLines();
 			}.bind(this), {name: messages.unindentLines});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(38, false, false, true), "moveLinesUp"); //$NON-NLS-0$
 			textView.setAction("moveLinesUp", function() { //$NON-NLS-0$
 				return this.moveLinesUp();
 			}.bind(this), {name: messages.moveLinesUp});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(40, false, false, true), "moveLinesDown"); //$NON-NLS-0$
 			textView.setAction("moveLinesDown", function() { //$NON-NLS-0$
 				return this.moveLinesDown();
 			}.bind(this), {name: messages.moveLinesDown});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(38, true, false, true), "copyLinesUp"); //$NON-NLS-0$
 			textView.setAction("copyLinesUp", function() { //$NON-NLS-0$
 				return this.copyLinesUp();
 			}.bind(this), {name: messages.copyLinesUp});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(40, true, false, true), "copyLinesDown"); //$NON-NLS-0$
 			textView.setAction("copyLinesDown", function() { //$NON-NLS-0$
 				return this.copyLinesDown();
 			}.bind(this), {name: messages.copyLinesDown});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding('d', true, false, false), "deleteLines"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("deleteLines", function(data) { //$NON-NLS-0$
 				return this.deleteLines(data);
 			}.bind(this), {name: messages.deleteLines});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("l", !util.isMac, false, false, util.isMac), "gotoLine"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("gotoLine", function() { //$NON-NLS-0$
 				return this.gotoLine();
 			}.bind(this), {name: messages.gotoLine});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(190, true), "nextAnnotation"); //$NON-NLS-0$
 			textView.setAction("nextAnnotation", function() { //$NON-NLS-0$
 				return this.nextAnnotation(true);
 			}.bind(this), {name: messages.nextAnnotation});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(188, true), "previousAnnotation"); //$NON-NLS-0$
 			textView.setAction("previousAnnotation", function() { //$NON-NLS-0$
 				return this.nextAnnotation(false);
 			}.bind(this), {name: messages.prevAnnotation});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("e", true, false, true, false), "expand"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("expand", function() { //$NON-NLS-0$
 				return this.expandAnnotation(true);
 			}.bind(this), {name: messages.expand});
-	
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("c", true, false, true, false), "collapse"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("collapse", function() { //$NON-NLS-0$
 				return this.expandAnnotation(false);
 			}.bind(this), {name: messages.collapse});
-	
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("e", true, true, true, false), "expandAll"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("expandAll", function() { //$NON-NLS-0$
 				return this.expandAnnotations(true);
 			}.bind(this), {name: messages.expandAll});
-	
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("c", true, true, true, false), "collapseAll"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("collapseAll", function() { //$NON-NLS-0$
 				return this.expandAnnotations(false);
 			}.bind(this), {name: messages.collapseAll});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding("q", !util.isMac, false, false, util.isMac), "lastEdit"); //$NON-NLS-1$ //$NON-NLS-0$
 			textView.setAction("lastEdit", function() { //$NON-NLS-0$
 				return this.gotoLastEdit();
@@ -14204,7 +14867,9 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 		nextAnnotation: function (forward) {
 			var editor = this.editor;
 			var annotationModel = editor.getAnnotationModel();
-			if(!annotationModel) { return true; }
+			if (!annotationModel) { return true; }
+			var styler = editor.getAnnotationStyler();
+			if (!styler) { return true; }
 			var model = editor.getModel();
 			var currentOffset = editor.getCaretOffset();
 			var annotations = annotationModel.getAnnotations(forward ? currentOffset : 0, forward ? model.getCharCount() : currentOffset);
@@ -14216,14 +14881,8 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				} else {
 					if (annotation.start >= currentOffset) { continue; }
 				}
-				switch (annotation.type) {
-					case mAnnotations.AnnotationType.ANNOTATION_ERROR:
-					case mAnnotations.AnnotationType.ANNOTATION_WARNING:
-					case mAnnotations.AnnotationType.ANNOTATION_TASK:
-					case mAnnotations.AnnotationType.ANNOTATION_BOOKMARK:
-						break;
-					default:
-						continue;
+				if (!(annotation.rangeStyle && styler.isAnnotationTypeVisible(annotation.type))) {
+					continue;
 				}
 				foundAnnotation = annotation;
 				if (forward) {
@@ -14242,7 +14901,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 					tooltip.setTarget({
 						getTooltipInfo: function() {
 							var tooltipCoords = view.convert({
-								x: view.getLocationAtOffset(foundAnnotation.start).x, 
+								x: view.getLocationAtOffset(foundAnnotation.start).x,
 								y: view.getLocationAtOffset(model.getLineStart(nextLine)).y
 							}, "document", "page"); //$NON-NLS-1$ //$NON-NLS-0$
 							return {
@@ -14299,7 +14958,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			if (this.undoStack) {
 				this.undoStack.startCompoundChange();
 			}
-		}, 
+		},
 		endUndo: function() {
 			if (this.undoStack) {
 				this.undoStack.endCompoundChange();
@@ -14307,7 +14966,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 		}
 	};
 	exports.TextActions = TextActions;
-	
+
 	/**
 	 * @param {orion.editor.Editor} editor
 	 * @param {orion.editor.UndoStack} undoStack
@@ -14327,14 +14986,19 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 	SourceCodeActions.prototype = {
 		init: function() {
 			var textView = this.editor.getTextView();
-		
+
 			textView.setAction("lineStart", function() { //$NON-NLS-0$
 				return this.lineStart();
 			}.bind(this));
-			
+
 			textView.setAction("enter", function() { //$NON-NLS-0$
 				return this.autoIndent();
 			}.bind(this));
+
+			textView.setKeyBinding(new mKeyBinding.KeyBinding("t", true, false, true), "trimTrailingWhitespaces"); //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("trimTrailingWhitespaces", function() { //$NON-NLS-0$
+				return this.trimTrailingWhitespaces();
+			}.bind(this), {name: messages.trimTrailingWhitespaces});
 
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(191, true), "toggleLineComment"); //$NON-NLS-0$
 			textView.setAction("toggleLineComment", function() { //$NON-NLS-0$
@@ -14345,11 +15009,60 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			textView.setAction("addBlockComment", function() { //$NON-NLS-0$
 				return this.addBlockComment();
 			}.bind(this), {name: messages.addBlockComment});
-			
+
 			textView.setKeyBinding(new mKeyBinding.KeyBinding(220, true, !util.isMac, false, util.isMac), "removeBlockComment"); //$NON-NLS-0$
 			textView.setAction("removeBlockComment", function() { //$NON-NLS-0$
 				return this.removeBlockComment();
 			}.bind(this), {name: messages.removeBlockComment});
+
+			// Autocomplete square brackets []
+			textView.setKeyBinding(new mKeyBinding.KeyBinding("[", false, false, false, false, "keypress"), "autoPairSquareBracket"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("autoPairSquareBracket", function() { //$NON-NLS-0$
+				return this.autoPairBrackets("[", "]"); //$NON-NLS-1$ //$NON-NLS-0$
+			}.bind(this));
+
+			textView.setKeyBinding(new mKeyBinding.KeyBinding(']', false, false, false, false, "keypress"), "skipClosingSquareBracket"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("skipClosingSquareBracket", function() { //$NON-NLS-0$
+				return this.skipClosingBracket(']'); //$NON-NLS-0$
+			}.bind(this));
+
+			// Autocomplete parentheses ()
+			textView.setKeyBinding(new mKeyBinding.KeyBinding("(", false, false, false, false, "keypress"), "autoPairParentheses"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("autoPairParentheses", function() { //$NON-NLS-0$
+				return this.autoPairBrackets("(", ")"); //$NON-NLS-1$ //$NON-NLS-0$
+			}.bind(this));
+
+			textView.setKeyBinding(new mKeyBinding.KeyBinding(')', false, false, false, false, "keypress"), "skipClosingParenthesis"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("skipClosingParenthesis", function() { //$NON-NLS-0$
+				return this.skipClosingBracket(")"); //$NON-NLS-0$
+			}.bind(this));
+
+			// Autocomplete braces {}
+			textView.setKeyBinding(new mKeyBinding.KeyBinding("{", false, false, false, false, "keypress"), "autoPairBraces"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("autoPairBraces", function() { //$NON-NLS-0$
+				return this.autoPairBrackets("{", "}"); //$NON-NLS-1$ //$NON-NLS-0$
+			}.bind(this));
+
+			textView.setKeyBinding(new mKeyBinding.KeyBinding('}', false, false, false, false, "keypress"), "skipClosingBrace"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("skipClosingBrace", function() { //$NON-NLS-0$
+				return this.skipClosingBracket("}"); //$NON-NLS-0$
+			}.bind(this));
+
+			// Autocomplete single quotations
+			textView.setKeyBinding(new mKeyBinding.KeyBinding("'", false, false, false, false, "keypress"), "autoPairSingleQuotation"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("autoPairSingleQuotation", function() { //$NON-NLS-0$
+				return this.autoPairQuotations("'"); //$NON-NLS-1$ //$NON-NLS-0$
+			}.bind(this));
+
+			// Autocomplete double quotations
+			textView.setKeyBinding(new mKeyBinding.KeyBinding('"', false, false, false, false, "keypress"), "autoPairDblQuotation"); //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
+			textView.setAction("autoPairDblQuotation", function() { //$NON-NLS-0$
+				return this.autoPairQuotations('"'); //$NON-NLS-1$ //$NON-NLS-0$
+			}.bind(this));
+
+			textView.setAction("deletePrevious", function() { //$NON-NLS-0$
+				return this.deletePrevious();
+			}.bind(this));
 		},
 		autoIndent: function() {
 			var editor = this.editor;
@@ -14359,14 +15072,110 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			if (selection.start === selection.end) {
 				var model = editor.getModel();
 				var lineIndex = model.getLineAtOffset(selection.start);
-				var lineText = model.getLine(lineIndex, true);
+				var lineText = model.getLine(lineIndex, false);
 				var lineStart = model.getLineStart(lineIndex);
-				var index = 0, end = selection.start - lineStart, c;
-				while (index < end && ((c = lineText.charCodeAt(index)) === 32 || c === 9)) { index++; }
-				if (index > 0) {
+				var index = 0;
+				var lineOffset = selection.start - lineStart;
+				var c;
+				while (index < lineOffset && ((c = lineText.charCodeAt(index)) === 32 || c === 9)) { index++; }
+				var prefix = lineText.substring(0, index);
+				var options = textView.getOptions("tabSize", "expandTab"); //$NON-NLS-1$ //$NON-NLS-0$
+				var tab = options.expandTab ? new Array(options.tabSize + 1).join(" ") : "\t"; //$NON-NLS-1$ //$NON-NLS-0$
+				var lineDelimiter = model.getLineDelimiter();
+				var matchCommentStart = /^[\s]*\/\*[\*]*[\s]*$/;
+				var matchCommentDelimiter = /^[\s]*\*/;
+				var matchCommentEnd = /\*\/[\s]*$/;
+				var lineTextBeforeCaret = lineText.substring(0, lineOffset);
+				var lineTextAfterCaret = lineText.substring(lineOffset);
+				var text;
+				// If the character before the caret is an opening brace, smart indent the next line.
+				var prevCharIdx = lineTextBeforeCaret.trimRight().length - 1;
+				if (this.smartIndentation && lineText.charCodeAt(prevCharIdx) === 123) {
+					// Remove any extra whitespace
+					var whitespaceBeforeCaret = lineOffset - prevCharIdx - 1;
+					var whitespaceAfterCaret = lineTextAfterCaret.length - lineTextAfterCaret.trimLeft().length;
+
+					text = lineText.charCodeAt(lineOffset + whitespaceAfterCaret) === 125 ?
+						   lineDelimiter + prefix + tab + lineDelimiter + prefix :
+						   lineDelimiter + prefix + tab;
+
+					editor.setText(text, selection.start - whitespaceBeforeCaret, selection.end + whitespaceAfterCaret);
+					editor.setCaretOffset(selection.start + lineDelimiter.length + prefix.length + tab.length - whitespaceBeforeCaret);
+					return true;
+				// Proceed with autocompleting multi-line comment if the text before the caret matches
+				// the start or comment delimiter (*) of a multi-line comment
+				} else if ((!matchCommentEnd.test(lineTextBeforeCaret)) &&
+							(matchCommentStart.test(lineTextBeforeCaret) || matchCommentDelimiter.test(lineTextBeforeCaret))) {
+					var caretOffset;
+
+					/**
+					 * Matches the start of a multi-line comment. Autocomplete the multi-line block comment,
+					 * moving any text after the caret into the block comment and setting the caret to be
+					 * after the comment delimiter.
+					 */
+					var match = matchCommentStart.exec(lineTextBeforeCaret);
+					if (match) {
+						text = lineDelimiter + prefix + " * "; //$NON-NLS-0$
+						// Text added into the comment block are trimmed of all preceding and trailing whitespaces.
+						// If the text after the caret contains the ending of a block comment, exclude the ending.
+						if (matchCommentEnd.test(lineTextAfterCaret)) {
+							text += lineTextAfterCaret.substring(0, lineTextAfterCaret.length - 2).trim();
+						} else {
+							text += lineTextAfterCaret.trim();
+						}
+						// Add the closing to the multi-line block comment if the next line is not a
+						// comment delimiter.
+						if ((model.getLineCount() === lineIndex + 1) ||
+							!matchCommentDelimiter.test(model.getLine(lineIndex + 1))) {
+							text += lineDelimiter + prefix + " */"; //$NON-NLS-0$
+						}
+						editor.setText(text, selection.start, selection.end + lineTextAfterCaret.length);
+						editor.setCaretOffset(selection.start + lineDelimiter.length + prefix.length + 3);
+						return true;
+					}
+
+					/**
+					 * Matches a comment delimiter (*) as the start of the line, and traverses up the lines to confirm if
+					 * it is a multi-line comment by matching the start of a block comment. If so, continue the
+					 * multi-line comment in the next line. Any text that follows after the caret is moved to the newly
+					 * added comment delimiter.
+					 */
+					match = matchCommentDelimiter.exec(lineTextBeforeCaret);
+					if (match) {
+						for (var i = lineIndex - 1; i >= 0; i--) {
+							var prevLine = model.getLine(i, false);
+							if (matchCommentStart.test(prevLine)) {
+								/**
+								 * If the text after the caret matches the end of a comment block or the character in front of the
+								 * caret is a forward slash, continue the block comment with the caret and text after the caret on
+								 * the next line directly in front of the star (*).
+								 */
+								if (matchCommentEnd.test(lineTextAfterCaret) || lineText.charCodeAt(lineOffset) === 47) {
+									text = lineDelimiter + prefix + "*" + lineTextAfterCaret; //$NON-NLS-0$
+									caretOffset = selection.start + lineDelimiter.length + prefix.length + 1;
+								} else {
+									text = lineDelimiter + prefix + "* " + lineTextAfterCaret; //$NON-NLS-0$
+									caretOffset = selection.start + lineDelimiter.length + prefix.length + 2;
+								}
+								editor.setText(text, selection.start, selection.end + lineTextAfterCaret.length);
+								editor.setCaretOffset(caretOffset);
+								return true;
+							} else if (!matchCommentDelimiter.test(prevLine)) {
+								return false;
+							}
+						}
+					}
+
+					return false;
+				} else if (matchCommentEnd.test(lineTextBeforeCaret)) {
+					// Matches the end of a block comment. Fix the indentation for the following line.
+					text = lineText.substring(selection.start) + lineDelimiter + prefix.substring(0, prefix.length - 1);
+					editor.setText(text, selection.start, selection.end);
+					editor.setCaretOffset(selection.start + text.length);
+					return true;
+				} else if (index > 0) {
 					//TODO still wrong when typing inside folding
-					var prefix = lineText.substring(0, index);
-					index = end;
+					index = lineOffset;
 					while (index < lineText.length && ((c = lineText.charCodeAt(index++)) === 32 || c === 9)) { selection.end++; }
 					editor.setText(model.getLineDelimiter() + prefix, selection.start, selection.end);
 					return true;
@@ -14381,21 +15190,88 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			var model = editor.getModel();
 			var selection = editor.getSelection();
 			var open = "/*", close = "*/", commentTags = new RegExp("/\\*" + "|" + "\\*/", "g"); //$NON-NLS-5$ //$NON-NLS-4$ //$NON-NLS-3$ //$NON-NLS-2$ //$NON-NLS-1$ //$NON-NLS-0$
-			
+
 			var result = this._findEnclosingComment(model, selection.start, selection.end);
 			if (result.commentStart !== undefined && result.commentEnd !== undefined) {
 				return true; // Already in a comment
 			}
-			
+
 			var text = model.getText(selection.start, selection.end);
 			if (text.length === 0) { return true; }
-			
+
 			var oldLength = text.length;
 			text = text.replace(commentTags, "");
 			var newLength = text.length;
-			
+
 			editor.setText(open + text + close, selection.start, selection.end);
 			editor.setSelection(selection.start + open.length, selection.end + open.length + (newLength-oldLength));
+			return true;
+		},
+		/**
+		 * Called on an opening bracket keypress.
+		 * Automatically inserts the specified opening and closing brackets around the caret or selected text.
+		 */
+		autoPairBrackets: function(openBracket, closeBracket) {
+			if (!this.autoPairing) { return false; }
+			var editor = this.editor;
+			var textView = editor.getTextView();
+			if (textView.getOptions("readonly")) { return false; } //$NON-NLS-0$
+			var selection = editor.getSelection();
+			var model = editor.getModel();
+			var currentOffset = editor.getCaretOffset();
+			var nextChar = (currentOffset === model.getCharCount()) ? "" : model.getText(selection.start, selection.start + 1).trim(); //$NON-NLS-0$
+			var isClosingBracket = new RegExp("^$|[)}\\]>]"); //$NON-NLS-0$ // matches any empty string and closing bracket
+
+			if (selection.start === selection.end && isClosingBracket.test(nextChar)) { //$NON-NLS-0$
+				// No selection and subsequent character is not a closing bracket - wrap the caret with the opening and closing brackets,
+				// and maintain the caret position inbetween the brackets
+				editor.setText(openBracket + closeBracket, selection.start, selection.start);
+				editor.setCaretOffset(selection.start + 1);
+				return true;
+			} else if (selection.start !== selection.end) {
+				// Wrap the selected text with the specified opening and closing brackets and keep selection on text
+				var text = model.getText(selection.start, selection.end);
+				editor.setText(openBracket + text + closeBracket, selection.start, selection.end);
+				editor.setSelection(selection.start + 1, selection.end + 1);
+				return true;
+			}
+			return false;
+		},
+		/**
+		 * Called on a quotation mark keypress.
+		 * Automatically inserts a pair of the specified quotation around the caret the caret or selected text.
+		 */
+		autoPairQuotations: function(quotation) {
+			if (!this.autoPairing) { return false; }
+			var editor = this.editor;
+			var textView = editor.getTextView();
+			if (textView.getOptions("readonly")) { return false; } //$NON-NLS-0$
+			var selection = editor.getSelection();
+			var model = editor.getModel();
+			var currentOffset = editor.getCaretOffset();
+			var prevChar = (currentOffset === 0) ? "" : model.getText(selection.start - 1, selection.start).trim(); //$NON-NLS-0$
+			var nextChar = (currentOffset === model.getCharCount()) ? "" : model.getText(selection.start, selection.start + 1).trim(); //$NON-NLS-0$
+			var isQuotation = new RegExp("^\"$|^'$"); //$NON-NLS-0$
+			var isAlpha = new RegExp("\\w"); //$NON-NLS-0$
+			var isClosingBracket = new RegExp("^$|[)}\\]>]"); //$NON-NLS-0$ // matches any empty string and closing bracket
+
+			// Wrap the selected text with the specified opening and closing quotation marks and keep selection on text
+			if (selection.start !== selection.end) {
+				var text = model.getText(selection.start, selection.end);
+				if (isQuotation.test(text)) { return false; }
+				editor.setText(quotation + text + quotation, selection.start, selection.end);
+				editor.setSelection(selection.start + 1, selection.end + 1);
+			} else if (nextChar === quotation) {
+				// Skip over the next character if it matches the specified quotation mark
+				editor.setCaretOffset(selection.start + 1);
+			} else if (prevChar === quotation || isQuotation.test(nextChar) || isAlpha.test(prevChar) || !isClosingBracket.test(nextChar)) {
+				// Insert the specified quotation mark
+				return false;
+			} else {
+				// No selection - wrap the caret with the opening and closing quotation marks, and maintain the caret position inbetween the quotations
+				editor.setText(quotation + quotation, selection.start, selection.start);
+				editor.setCaretOffset(selection.start + 1);
+			}
 			return true;
 		},
 		/**
@@ -14404,7 +15280,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 		 * @param {orion.editor.ContentAssist#ProposalAppliedEvent} event
 		 */
 		contentAssistProposalApplied: function(event) {
-			/**
+			/*
 			 * The event.proposal is an object with this shape:
 			 * {   proposal: "[proposal string]", // Actual text of the proposal
 			 *     description: "diplay string", // Optional
@@ -14419,7 +15295,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			 * Offsets are relative to the text buffer.
 			 */
 			var proposal = event.data.proposal;
-			
+
 			//if the proposal specifies linked positions, build the model and enter linked mode
 			if (proposal.positions && proposal.positions.length > 0 && this.linkedMode) {
 				var positionGroups = [];
@@ -14446,6 +15322,27 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				textView.setCaretOffset(proposal.escapePosition);
 			}
 			return true;
+		},
+		// On backspace keypress, checks if there are a pair of brackets or quotation marks to be deleted
+		deletePrevious: function() {
+			var editor = this.editor;
+			var textView = editor.getTextView();
+			if (textView.getOptions("readonly")) { return false; } //$NON-NLS-0$
+			var selection = editor.getSelection();
+			var model = editor.getModel();
+			var caretOffset = editor.getCaretOffset();
+			var prevChar = (caretOffset === 0) ? "" : model.getText(selection.start - 1, selection.start); //$NON-NLS-0$
+			var nextChar = (caretOffset === model.getCharCount()) ? "" : model.getText(selection.start, selection.start + 1); //$NON-NLS-0$
+
+			if ((prevChar === "(" && nextChar === ")") || //$NON-NLS-1$ //$NON-NLS-0$
+				(prevChar === "[" && nextChar === "]") || //$NON-NLS-1$ //$NON-NLS-0$
+				(prevChar === "{" && nextChar === "}") || //$NON-NLS-1$ //$NON-NLS-0$
+				(prevChar === "<" && nextChar === ">") || //$NON-NLS-1$ //$NON-NLS-0$
+				(prevChar === '"' && nextChar === '"') || //$NON-NLS-1$ //$NON-NLS-0$
+				(prevChar === "'" && nextChar === "'")) { //$NON-NLS-1$ //$NON-NLS-0$
+				editor.setText("", selection.start, selection.start + 1); //$NON-NLS-0$
+			}
+			return false;
 		},
 		_findEnclosingComment: function(model, start, end) {
 			var open = "/*", close = "*/"; //$NON-NLS-1$ //$NON-NLS-0$
@@ -14507,7 +15404,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			var model = editor.getModel();
 			var selection = editor.getSelection();
 			var open = "/*", close = "*/"; //$NON-NLS-1$ //$NON-NLS-0$
-			
+
 			// Try to shrink selection to a comment block
 			var selectedText = model.getText(selection.start, selection.end);
 			var newStart, newEnd;
@@ -14524,7 +15421,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 					break;
 				}
 			}
-			
+
 			if (newStart !== undefined && newEnd !== undefined) {
 				editor.setText(model.getText(newStart + open.length, newEnd), newStart, newEnd + close.length);
 				editor.setSelection(newStart, newEnd);
@@ -14534,7 +15431,7 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 				if (result.commentStart === undefined || result.commentEnd === undefined) {
 					return true;
 				}
-				
+
 				var text = model.getText(result.commentStart + open.length, result.commentEnd);
 				editor.setText(text, result.commentStart, result.commentEnd + close.length);
 				editor.setSelection(selection.start - open.length, selection.end - close.length);
@@ -14591,20 +15488,72 @@ define("orion/editor/actions", [ //$NON-NLS-0$
 			editor.setSelection(selStart, selEnd);
 			return true;
 		},
+		trimTrailingWhitespaces: function() {
+			var editor = this.editor;
+			var model = editor.getModel();
+			var selection = editor.getSelection();
+			editor.getTextView().setRedraw(false);
+			editor.getUndoStack().startCompoundChange();
+			var matchTrailingWhiteSpace = /(\s+$)/;
+			var lineCount = model.getLineCount();
+			for (var i = 0; i < lineCount; i++) {
+				var lineText = model.getLine(i);
+				var match = matchTrailingWhiteSpace.exec(lineText);
+				if (match) {
+					var lineStartOffset = model.getLineStart(i);
+					var matchLength = match[0].length;
+					var start = lineStartOffset + match.index;
+					model.setText("", start, start + matchLength);
+					/**
+					 * Move the caret to its original position prior to the save. If the caret
+					 * was in the trailing whitespaces, move the caret to the end of the line.
+					 */
+					if (selection.start > start) {
+						selection.start = Math.max(start, selection.start - matchLength);
+					}
+					if (selection.start !== selection.end && selection.end > start) {
+						selection.end = Math.max(start, selection.end - matchLength);
+					}
+				}
+			}
+			editor.getUndoStack().endCompoundChange();
+			editor.getTextView().setRedraw(true);
+			editor.setSelection(selection.start, selection.end, false);
+		},
 		startUndo: function() {
 			if (this.undoStack) {
 				this.undoStack.startCompoundChange();
 			}
-		}, 
-		
+		},
+		skipClosingBracket: function(closingChar) {
+			var editor = this.editor;
+			var textView = editor.getTextView();
+			if (textView.getOptions("readonly")) { return false; } //$NON-NLS-0$
+			var selection = editor.getSelection();
+			var model = editor.getModel();
+			var currentOffset = editor.getCaretOffset();
+			var nextChar = (currentOffset === model.getCharCount()) ? "" : model.getText(selection.start, selection.start + 1); //$NON-NLS-0$
+
+			if (nextChar === closingChar) {
+				editor.setCaretOffset(selection.start + 1);
+				return true;
+			}
+			return false;
+		},
 		endUndo: function() {
 			if (this.undoStack) {
 				this.undoStack.endCompoundChange();
 			}
+		},
+		setAutoPairing: function(enabled) {
+			this.autoPairing = enabled;
+		},
+		setSmartIndentation: function(enabled) {
+			this.smartIndentation = enabled;
 		}
 	};
 	exports.SourceCodeActions = SourceCodeActions;
-	
+
 	return exports;
 });
 
@@ -15755,8 +16704,9 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 	'orion/editor/eventTarget', //$NON-NLS-0$
 	'orion/Deferred', //$NON-NLS-0$
 	'orion/objects', //$NON-NLS-0$
+	'orion/editor/util', //$NON-NLS-0$
 	'orion/util' //$NON-NLS-0$
-], function(messages, mKeyBinding, mKeyModes, mEventTarget, Deferred, objects, util) {
+], function(messages, mKeyBinding, mKeyModes, mEventTarget, Deferred, objects, textUtil, util) {
 	/**
 	 * @name orion.editor.ContentAssistProvider
 	 * @class Interface defining a provider of content assist proposals.
@@ -15983,8 +16933,8 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 			}
 		},
 		/**
-		 * @private
 		 * Retrieves the proposals at the given offset.
+		 * @private
 		 * @param {Number} offset The caret offset.
 		 * @returns {Deferred} A promise that will provide the proposals.
 		 */
@@ -16064,7 +17014,12 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 		var self = this;
 		this.contentAssist.addEventListener("ProposalsComputed", function(event) { //$NON-NLS-0$
 			self.proposals = event.data.proposals;
-			self.selectedIndex = self.proposals.length ? 0 : -1;
+			if (self.proposals.length === 0) {
+				self.selectedIndex = -1;
+				self.cancel();
+			} else {
+				self.selectedIndex = 0;	
+			}
 		});
 		textView.setAction("contentAssistApply", function() { //$NON-NLS-0$
 			return this.enter();
@@ -16077,6 +17032,12 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 		}.bind(this));
 		textView.setAction("contentAssistPreviousProposal", function() { //$NON-NLS-0$
 			return this.lineUp();
+		}.bind(this));
+		textView.setAction("contentAssistNextPage", function() { //$NON-NLS-0$
+			return this.pageDown();
+		}.bind(this));
+		textView.setAction("contentAssistPreviousPage", function() { //$NON-NLS-0$
+			return this.pageUp();
 		}.bind(this));
 		textView.setAction("contentAssistTab", function() { //$NON-NLS-0$
 			return this.tab();
@@ -16091,6 +17052,8 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 			bindings.push({actionID: "contentAssistCancel", keyBinding: new KeyBinding(27)}); //$NON-NLS-0$
 			bindings.push({actionID: "contentAssistNextProposal", keyBinding: new KeyBinding(40)}); //$NON-NLS-0$
 			bindings.push({actionID: "contentAssistPreviousProposal", keyBinding: new KeyBinding(38)}); //$NON-NLS-0$
+			bindings.push({actionID: "contentAssistNextPage", keyBinding: new KeyBinding(34)}); //$NON-NLS-0$
+			bindings.push({actionID: "contentAssistPreviousPage", keyBinding: new KeyBinding(33)}); //$NON-NLS-0$
 			bindings.push({actionID: "contentAssistTab", keyBinding: new KeyBinding(9)}); //$NON-NLS-0$
 			return bindings;
 		},
@@ -16113,6 +17076,9 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 		},
 		lineUp: function() {
 			var newSelected = (this.selectedIndex === 0) ? this.proposals.length - 1 : this.selectedIndex - 1;
+			return this._lineUp(newSelected);
+		},
+		_lineUp: function(newSelected) {
 			while (this.proposals[newSelected].unselectable && newSelected > 0) {
 				newSelected--;
 			}
@@ -16124,6 +17090,9 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 		},
 		lineDown: function() {
 			var newSelected = (this.selectedIndex === this.proposals.length - 1) ? 0 : this.selectedIndex + 1;
+			return this._lineDown(newSelected);
+		},
+		_lineDown: function(newSelected) {
 			while (this.proposals[newSelected].unselectable && newSelected < this.proposals.length-1) {
 				newSelected++;
 			}
@@ -16132,6 +17101,30 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 				this.widget.setSelectedIndex(this.selectedIndex);
 			}
 			return true;
+		},
+		pageUp: function() {
+			if (this.widget) {
+				var newSelected = this.widget.getTopIndex();
+				if (newSelected === this.selectedIndex) {
+					this.widget.scrollIndex(newSelected, false);
+					newSelected = this.widget.getTopIndex();
+				}
+				return this._lineUp(newSelected);
+			} else {
+				return this.lineUp();
+			}
+		},
+		pageDown: function() {
+			if (this.widget) {
+				var newSelected = this.widget.getBottomIndex();
+				if (newSelected === this.selectedIndex) {
+					this.widget.scrollIndex(newSelected, true);
+					newSelected = this.widget.getBottomIndex();
+				}
+				return this._lineDown(newSelected);
+			} else {
+				return this.lineDown();
+			}
 		},
 		enter: function() {
 			var proposal = this.proposals[this.selectedIndex] || null;
@@ -16206,14 +17199,13 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 				self.position();
 			}
 		};
-		if (document.addEventListener) {
-			document.addEventListener("scroll", this.scrollListener); //$NON-NLS-0$
-		}
+		textUtil.addEventListener(document, "scroll", this.scrollListener); //$NON-NLS-0$
 	}
 	ContentAssistWidget.prototype = /** @lends orion.editor.ContentAssistWidget.prototype */ {
 		/** @private */
 		onClick: function(e) {
-			this.contentAssist.apply(this.getProposal(e.target));
+			if (!e) { e = window.event; }
+			this.contentAssist.apply(this.getProposal(e.target || e.srcElement));
 			this.textView.focus();
 		},
 		/** @private */
@@ -16238,12 +17230,19 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 		/** @private */
 		createAccessible: function(mode) {
 			if(!this._isAccessible) {
-				this.parentNode.addEventListener("keydown", function(evt) { //$NON-NLS-0$
-					evt.preventDefault();
+				textUtil.addEventListener(this.parentNode, "keydown", function(evt) { //$NON-NLS-0$
+					if (!evt) { evt = window.event; }
 					if(evt.keyCode === 27) {return mode.cancel(); }
 					else if(evt.keyCode === 38) { return mode.lineUp(); }
 					else if(evt.keyCode === 40) { return mode.lineDown(); }
 					else if(evt.keyCode === 13) { return mode.enter(); }
+					if (evt.preventDefault) {
+						evt.preventDefault();
+					} else {
+						evt.cancelBubble = true;
+						evt.returnValue = false;
+						evt.keyCode = 0;
+					}
 					return false;
 				});
 			}
@@ -16283,6 +17282,32 @@ define("orion/editor/contentAssist", [ //$NON-NLS-0$
 				nodeIndex++;
 			}
 			return null;
+		},
+		/** @private */
+		getTopIndex: function() {
+			var nodes = this.parentNode.childNodes;
+			for (var i=0; i < nodes.length; i++) {
+				var child = nodes[i];
+				if (child.offsetTop >= this.parentNode.scrollTop) {
+					return i;
+				}
+			}
+			return 0;
+		},
+		/** @private */
+		getBottomIndex: function() {
+			var nodes = this.parentNode.childNodes;
+			for (var i=0; i < nodes.length; i++) {
+				var child = nodes[i];
+				if ((child.offsetTop + child.offsetHeight) > (this.parentNode.scrollTop + this.parentNode.clientHeight)) {
+					return Math.max(0, i - 1);
+				}
+			}
+			return nodes.length - 1;
+		},
+		/** @private */
+		scrollIndex: function(index, top) {
+			this.parentNode.childNodes[index].scrollIntoView(top);
 		},
 		/** Sets the index of the currently selected proposal. */
 		setSelectedIndex: function(/**Number*/ index) {
@@ -17023,6 +18048,11 @@ define("orion/editor/jsTemplateContentAssist", [ //$NON-NLS-0$
 			template: "function ${name} (${parameter}) {\n\t${cursor}\n}" //$NON-NLS-0$
 		},
 		{
+			prefix: "nls", //$NON-NLS-0$
+			description: "string - non NLS",
+			template: "${cursor} //$NON-NLS-${0}$" //$NON-NLS-0$
+		},
+		{
 			prefix: "log", //$NON-NLS-0$
 			description: "log - console log",
 			template: "console.log(${object});" //$NON-NLS-0$
@@ -17466,8 +18496,8 @@ define("orion/editor/mirror", ["i18n!orion/editor/nls/messages", "orion/editor/e
 	/**
 	 * @name orion.mirror.Mirror
 	 * @class A shim for CodeMirror's <code>CodeMirror</code> API.
-	 * @description A Mirror is a partial implementation of the API provided by the <a href="http://codemirror.net/doc/manual.html#api">
-	 * <code>CodeMirror</code> object</a>. Mirror provides functionality related to mode and MIME management.
+	 * @description A Mirror is a partial implementation of the API provided by the <code><a href="http://codemirror.net/doc/manual.html#api">CodeMirror object</a></code>.
+	 * Mirror provides functionality related to mode and MIME management.
 	 * 
 	 * <p>If clients intend to reuse modes provided by CodeMirror without modification, they must expose a Mirror as 
 	 * a property named <code>"CodeMirror"</code> of the global object so that modes may access it to register themselves,
@@ -17585,7 +18615,6 @@ define("orion/editor/mirror", ["i18n!orion/editor/nls/messages", "orion/editor/e
 	/**
 	 * @name orion.mirror.MirrorLineStyle
 	 * @class Represents the style provided by a CodeMirror mode for a line.
-	 * @description 
 	 */
 	/**
 	 * @name orion.mirror.ModeApplier
@@ -17967,11 +18996,9 @@ define("orion/editor/mirror", ["i18n!orion/editor/nls/messages", "orion/editor/e
 		 * @param {Number} [lineIndex] The line index of the line having the given style. If omitted, the returned 
 		 * {@link orion.editor.StyleRange[]} objects will have offsets relative to the line, not the document.
 		 * 
-		 * @returns {orion.editor.StyleRange[][]} An array of 2 elements. The first element is an {@link orion.editor.StyleRange[]}
-		 * giving the styles for the line. 
-		 * <p>The second element is an {@link orion.editor.StyleRange[]} containing only those elements of
-		 * the first array that represent syntax errors. (By CodeMirror convention, anything assigned the <code>"cm-error"</code> tag
-		 * is assumed to be an error).</p>
+		 * @returns {Array} An array of 2 elements. The first element is an {@link orion.editor.StyleRange[]} giving the styles for the line. 
+		 * The second element is an {@link orion.editor.StyleRange[]} containing only those elements of the first array that represent
+		 * syntax errors. (By CodeMirror convention, anything assigned the <code>"cm-error"</code> tag is assumed to be an error).</p>
 		 */
 		toStyleRangesAndErrors: function(lineStyle, lineIndex) {
 			function token2Class(token) {
@@ -18165,7 +19192,7 @@ define("orion/editor/mirror", ["i18n!orion/editor/nls/messages", "orion/editor/e
 /*jslint regexp:false laxbreak:true*/
 /*global define */
 
-define("orion/editor/textMateStyler", ['orion/editor/regex' ], function(mRegex) {
+define("orion/editor/textMateStyler", ['orion/regex' ], function(mRegex) {
 
 var RegexUtil = {
 	// Rules to detect some unsupported Oniguruma features
@@ -18253,8 +19280,11 @@ var RegexUtil = {
 	/**
 	 * Checks if flag applies to entire pattern. If so, obtains replacement string by calling processor
 	 * on the unwrapped pattern. Handles 2 possible syntaxes: (?f)pat and (?f:pat)
+	 * @param {String} flag
+	 * @param {String} str
+	 * @param {Function} processor
 	 */
-	processGlobalFlag: function(/**String*/ flag, /**String*/ str, /**Function*/ processor) {
+	processGlobalFlag: function(flag, str, processor) {
 		function getMatchingCloseParen(/*String*/pat, /*Number*/start) {
 			var depth = 0,
 			    len = pat.length,
@@ -18668,8 +19698,8 @@ var RegexUtil = {
 		},
 		
 		/**
-		 * @private
 		 * Adds eclipse.Style objects for scope to our _styles cache.
+		 * @private
 		 * @param {String} scope A scope name, like "constant.character.php".
 		 */
 		addStyles: function(scope) {
@@ -19640,11 +20670,11 @@ define("orion/editor/htmlGrammar", [], function() {
 /*******************************************************************************
  * @license
  * Copyright (c) 2010, 2012 IBM Corporation and others.
- * All rights reserved. This program and the accompanying materials are made 
- * available under the terms of the Eclipse Public License v1.0 
- * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution 
- * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html). 
- * 
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v1.0
+ * (http://www.eclipse.org/legal/epl-v10.html), and the Eclipse Distribution
+ * License v1.0 (http://www.eclipse.org/org/documents/edl-v10.html).
+ *
  * Contributors: IBM Corporation - initial API and implementation
  *               Alex Lakatos - fix for bug#369781
  ******************************************************************************/
@@ -19677,10 +20707,10 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 	var HTML_MARKUP = 12;
 	var DOC_TAG = 13;
 	var TASK_TAG = 14;
-	
+
 	var BRACKETS = "{}()[]<>"; //$NON-NLS-0$
 
-	// Styles 
+	// Styles
 	var singleCommentStyle = {styleClass: "token_singleline_comment"}; //$NON-NLS-0$
 	var multiCommentStyle = {styleClass: "token_multiline_comment"}; //$NON-NLS-0$
 	var docCommentStyle = {styleClass: "token_doc_comment"}; //$NON-NLS-0$
@@ -19690,16 +20720,16 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 	var stringStyle = {styleClass: "token_string"}; //$NON-NLS-0$
 	var numberStyle = {styleClass: "token_number"}; //$NON-NLS-0$
 	var keywordStyle = {styleClass: "token_keyword"}; //$NON-NLS-0$
-	var spaceStyle = {styleClass: "token_space"}; //$NON-NLS-0$
-	var tabStyle = {styleClass: "token_tab"}; //$NON-NLS-0$
+	var spaceStyle = {styleClass: "token_space", unmergeable: true}; //$NON-NLS-0$
+	var tabStyle = {styleClass: "token_tab", unmergeable: true}; //$NON-NLS-0$
 	var caretLineStyle = {styleClass: "line_caret"}; //$NON-NLS-0$
-	
+
 	function Scanner (keywords, whitespacesVisible) {
 		this.keywords = keywords;
 		this.whitespacesVisible = whitespacesVisible;
 		this.setText("");
 	}
-	
+
 	Scanner.prototype = {
 		getOffset: function() {
 			return this.offset;
@@ -19804,7 +20834,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 								}
 							}
 						}
-						if (c === 42) { // STAR -> multi line 
+						if (c === 42) { // STAR -> multi line
 							c = this._read();
 							var token = MULTILINE_COMMENT;
 							if (c === 42) {
@@ -19893,7 +20923,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			this.startOffset = 0;
 		}
 	};
-	
+
 	function WhitespaceScanner () {
 		Scanner.call(this, null, true);
 	}
@@ -19917,7 +20947,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			}
 		}
 	};
-	
+
 	function CommentScanner (whitespacesVisible) {
 		Scanner.call(this, null, whitespacesVisible);
 	}
@@ -19989,7 +21019,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			}
 		}
 	};
-	
+
 	function FirstScanner () {
 		Scanner.call(this, null, false);
 	}
@@ -20007,7 +21037,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			}
 		}
 	};
-	
+
 	function TextStyler (view, lang, annotationModel) {
 		this.commentStart = "/*"; //$NON-NLS-0$
 		this.commentEnd = "*/"; //$NON-NLS-0$
@@ -20017,7 +21047,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			case "js": keywords = JS_KEYWORDS; break; //$NON-NLS-0$
 			case "css": keywords = CSS_KEYWORDS; break; //$NON-NLS-0$
 		}
-		this.whitespacesVisible = false;
+		this.whitespacesVisible = this.spacesVisible = this.tabsVisible = false;
 		this.detectHyperlinks = true;
 		this.highlightCaretLine = false;
 		this.foldingEnabled = true;
@@ -20033,8 +21063,8 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 		}
 		this.view = view;
 		this.annotationModel = annotationModel;
-		this._bracketAnnotations = undefined; 
-		
+		this._bracketAnnotations = undefined;
+
 		var self = this;
 		this._listener = {
 			onChanged: function(e) {
@@ -20066,7 +21096,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 		this._computeFolding();
 		view.redrawLines();
 	}
-	
+
 	TextStyler.prototype = {
 		destroy: function() {
 			var view = this.view;
@@ -20086,10 +21116,26 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 		setHighlightCaretLine: function(highlight) {
 			this.highlightCaretLine = highlight;
 		},
-		setWhitespacesVisible: function(visible) {
+		setWhitespacesVisible: function(visible, redraw) {
+			if (this.whitespacesVisible === visible) { return; }
 			this.whitespacesVisible = visible;
 			this._scanner.whitespacesVisible = visible;
 			this._commentScanner.whitespacesVisible = visible;
+			if (redraw) {
+				this.view.redraw();
+			}
+		},
+		setTabsVisible: function(visible) {
+			if (this.tabsVisible === visible) { return; }
+			this.tabsVisible = visible;
+			this.setWhitespacesVisible(this.tabsVisible || this.spacesVisible, false);
+			this.view.redraw();
+		},
+		setSpacesVisible: function(visible) {
+			if (this.spacesVisible === visible) { return; }
+			this.spacesVisible = visible;
+			this.setWhitespacesVisible(this.tabsVisible || this.spacesVisible, false);
+			this.view.redraw();
 		},
 		setDetectHyperlinks: function(enabled) {
 			this.detectHyperlinks = enabled;
@@ -20136,7 +21182,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			for (var i=0; i<comments.length; i++) {
 				var comment = comments[i];
 				var annotation = this._createFoldingAnnotation(viewModel, baseModel, comment.start, comment.end);
-				if (annotation) { 
+				if (annotation) {
 					add.push(annotation);
 				}
 			}
@@ -20198,9 +21244,9 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 				start = model.mapOffset(start);
 			}
 			var end = start + text.length;
-			
+
 			var styles = [];
-			
+
 			// for any sub range that is not a comment, parse code generating tokens (keywords, numbers, brackets, line comments, etc)
 			var offset = start, comments = this.comments;
 			var startIndex = this._binarySearch(comments, start, true);
@@ -20259,22 +21305,22 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 							style = stringStyle;
 						}
 						break;
-					case DOC_COMMENT: 
+					case DOC_COMMENT:
 						this._parseComment(scanner.getData(), tokenStart, styles, docCommentStyle, token);
 						continue;
 					case SINGLELINE_COMMENT:
 						this._parseComment(scanner.getData(), tokenStart, styles, singleCommentStyle, token);
 						continue;
-					case MULTILINE_COMMENT: 
+					case MULTILINE_COMMENT:
 						this._parseComment(scanner.getData(), tokenStart, styles, multiCommentStyle, token);
 						continue;
 					case WHITE_TAB:
-						if (this.whitespacesVisible) {
+						if (this.whitespacesVisible && this.tabsVisible) {
 							style = tabStyle;
 						}
 						break;
 					case WHITE_SPACE:
-						if (this.whitespacesVisible) {
+						if (this.whitespacesVisible && this.spacesVisible) {
 							style = spaceStyle;
 						}
 						break;
@@ -20292,12 +21338,12 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 				var style = s;
 				switch (token) {
 					case WHITE_TAB:
-						if (this.whitespacesVisible) {
+						if (this.whitespacesVisible && this.tabsVisible) {
 							style = tabStyle;
 						}
 						break;
 					case WHITE_SPACE:
-						if (this.whitespacesVisible) {
+						if (this.whitespacesVisible && this.spacesVisible) {
 							style = spaceStyle;
 						}
 						break;
@@ -20329,12 +21375,12 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 				var style = s;
 				switch (token) {
 					case WHITE_TAB:
-						if (this.whitespacesVisible) {
+						if (this.whitespacesVisible && this.tabsVisible) {
 							style = tabStyle;
 						}
 						break;
 					case WHITE_SPACE:
-						if (this.whitespacesVisible) {
+						if (this.whitespacesVisible && this.spacesVisible) {
 							style = spaceStyle;
 						}
 						break;
@@ -20411,7 +21457,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 				}
 			}
 			return result;
-		}, 
+		},
 		_findMatchingBracket: function(model, offset) {
 			var brackets = BRACKETS;
 			var bracket = model.getText(offset, offset + 1);
@@ -20592,7 +21638,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 					if (offset > mapBracket) {
 						offset--;
 						mapBracket++;
-					}	
+					}
 					view.setSelection(mapBracket, offset);
 				}
 			}
@@ -20611,7 +21657,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			var lineStart = baseModel.getLineStart(baseModel.getLineAtOffset(start));
 			var commentStart = this._binarySearch(this.comments, lineStart, true);
 			var commentEnd = this._binarySearch(this.comments, end, false, commentStart - 1, commentCount);
-			
+
 			var ts;
 			if (commentStart < commentCount && this.comments[commentStart].start <= lineStart && lineStart < this.comments[commentStart].end) {
 				ts = this.comments[commentStart].start;
@@ -20647,7 +21693,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 					if (comment.start !== newComment.start || comment.end !== newComment.end || comment.type !== newComment.type) {
 						redraw = true;
 						break;
-					} 
+					}
 				}
 			}
 			var args = [commentStart, commentEnd - commentStart].concat(newComments);
@@ -20722,7 +21768,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 			}
 		}
 	};
-	
+
 	return {TextStyler: TextStyler};
 });
 
@@ -20741,6 +21787,7 @@ define("examples/editor/textStyler", [ //$NON-NLS-0$
 /*globals define Node */
 
 define('orion/editor/edit', [ //$NON-NLS-0$
+	"orion/editor/shim", //$NON-NLS-0$
 	
 	"orion/editor/textView", //$NON-NLS-0$
 	"orion/editor/textModel", //$NON-NLS-0$
@@ -20767,7 +21814,7 @@ define('orion/editor/edit', [ //$NON-NLS-0$
 	"orion/editor/textMateStyler", //$NON-NLS-0$
 	"orion/editor/htmlGrammar", //$NON-NLS-0$
 	"examples/editor/textStyler" //$NON-NLS-0$
-], function(mTextView, mTextModel, mTextTheme, mProjModel, mEventTarget, mKeyBinding, mRulers, mAnnotations, mTooltip, mUndoStack, mTextDND, mEditor, mEditorFeatures, mContentAssist, mCSSContentAssist, mHtmlContentAssist, mJSContentAssist, mAsyncStyler, mMirror, mTextMateStyler, mHtmlGrammar, mTextStyler) {
+], function(shim, mTextView, mTextModel, mTextTheme, mProjModel, mEventTarget, mKeyBinding, mRulers, mAnnotations, mTooltip, mUndoStack, mTextDND, mEditor, mEditorFeatures, mContentAssist, mCSSContentAssist, mHtmlContentAssist, mJSContentAssist, mAsyncStyler, mMirror, mTextMateStyler, mHtmlGrammar, mTextStyler) {
 
 	/**	@private */
 	function getDisplay(window, document, element) {
@@ -20858,16 +21905,8 @@ define('orion/editor/edit', [ //$NON-NLS-0$
 	
 	/**	@private */
 	function getHeight(node) {
-		var document = node.ownerDocument;
-		var window = document.defaultView || document.parentWindow;
-		var height;
-		if (window.getComputedStyle) {
-			var style = window.getComputedStyle(node, null);
-			height = style.getPropertyValue("height"); //$NON-NLS-0$
-		} else if (node.currentStyle) {
-			height = node.currentStyle.height;
-		}
-		return parseInt(height, 10) || 0;
+		var rect = node.getBoundingClientRect();
+		return rect.bottom - rect.top;
 	}
 	
 	/**
@@ -20881,6 +21920,7 @@ define('orion/editor/edit', [ //$NON-NLS-0$
 	 * @property {Boolean} [expandTab=false] whether or not the tab key inserts white spaces.
 	 * @property {String} [themeClass] the CSS class for the view theming.
 	 * @property {Number} [tabSize=4] The number of spaces in a tab.
+	 * @property {Boolean} [singleMode=false] whether or not the editor is in single line mode.
 	 * @property {Boolean} [wrapMode=false] whether or not the view wraps lines.
 	 * @property {Function} [statusReporter] a status reporter.
 	 * @property {String} [title=""] the editor title.
@@ -20890,6 +21930,7 @@ define('orion/editor/edit', [ //$NON-NLS-0$
 	 * @property {Boolean} [showAnnotationRuler=true] whether or not the annotation ruler is shown.
 	 * @property {Boolean} [showOverviewRuler=true] whether or not the overview ruler is shown.
 	 * @property {Boolean} [showFoldingRuler=true] whether or not the folding ruler is shown.
+	 * @property {Number} [firstLineIndex=1] the line index displayed for the first line of text.
 	 */
 	/**
 	 * Creates an editor instance configured with the given options.
@@ -20942,6 +21983,7 @@ define('orion/editor/edit', [ //$NON-NLS-0$
 				fullSelection: options.fullSelection,
 				tabMode: options.tabMode,
 				expandTab: options.expandTab,
+				singleMode: options.singleMode,
 				themeClass: options.themeClass,
 				theme: options.theme,
 				wrapMode: options.wrapMode
@@ -21000,6 +22042,13 @@ define('orion/editor/edit', [ //$NON-NLS-0$
 			statusReporter: options.statusReporter,
 			domNode: parent
 		});
+		editor.addEventListener("TextViewInstalled", function() { //$NON-NLS-0$
+			var ruler = editor.getLineNumberRuler();
+			if (ruler && options.firstLineIndex !== undefined) {
+				ruler.setFirstLine(options.firstLineIndex);
+			}
+			editor.getSourceCodeActions().setAutoPairing(options.autoPairing);
+		});
 		
 		var contents = options.contents;
 		if (contents === undefined) {
@@ -21013,15 +22062,19 @@ define('orion/editor/edit', [ //$NON-NLS-0$
 		editor.setOverviewRulerVisible(options.showOverviewRuler === undefined || options.showOverviewRuler);
 		editor.setFoldingRulerVisible(options.showFoldingRuler === undefined || options.showFoldingRuler);
 		editor.setInput(options.title, null, contents);
+		
 		syntaxHighlighter.highlight(options.lang, editor);
 		if (contentAssist) {
 			var cssContentAssistProvider = new mCSSContentAssist.CssContentAssistProvider();
+			var htmlContentAssistProvider = new mHtmlContentAssist.HTMLContentAssistProvider();
 			var jsTemplateContentAssistProvider = new mJSContentAssist.JSTemplateContentAssistProvider();
 			contentAssist.addEventListener("Activating", function() { //$NON-NLS-0$
 				if (/css$/.test(options.lang)) {
 					contentAssist.setProviders([cssContentAssistProvider]);
 				} else if (/js$/.test(options.lang)) {
 					contentAssist.setProviders([jsTemplateContentAssistProvider]);
+				} else if (/html$/.test(options.lang)) {
+					contentAssist.setProviders([htmlContentAssistProvider]);
 				}
 			});
 		}
