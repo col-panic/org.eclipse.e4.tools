@@ -1,0 +1,10 @@
+<%@ jet package="org.eclipse.e4.tools.orion.editor.builder.js" class="JSEdit" %>
+
+/*globals require*/
+require(["orion/editor/edit"], function(edit) {
+	var editor = edit({
+		lang: "js"
+	});
+	setOrionEditor(editor);
+	//----------------
+});
