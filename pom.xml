@@ -50,6 +50,8 @@
     <module>./bundles/org.eclipse.e4.tools.css.editor.ui</module>
     <module>./bundles/org.eclipse.e4.tools.css.editor</module>
     <module>./bundles/org.eclipse.e4.tools.orion.css.editor</module>
+    <module>./bundles/org.eclipse.e4.tools.orion.editor</module>
+    <module>./bundles/org.eclipse.e4.tools.orion.editor.samples</module>
     <module>./bundles/org.eclipse.e4.tools.css.spy</module>
     <module>./bundles/org.eclipse.e4.tools.event.spy</module>
     <module>./features/org.eclipse.e4.core.tools.feature</module>
