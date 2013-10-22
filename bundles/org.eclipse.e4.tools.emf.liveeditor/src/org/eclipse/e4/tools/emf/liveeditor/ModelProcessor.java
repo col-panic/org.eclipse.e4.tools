@@ -25,7 +25,6 @@ public class ModelProcessor {
 
 	@Execute
 	public void process(MApplication application, EModelService modelService) {
-		System.out.println("ModelProcessor EModelService");
 		List<MCommand> commands = modelService.findElements(application,
 				"e4.tooling.livemodel", MCommand.class, null);
 
