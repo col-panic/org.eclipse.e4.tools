@@ -24,6 +24,10 @@
   <version>0.15.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
+	<properties>
+		<tycho.scmUrl>scm:git:git://git.eclipse.org/gitroot/e4/org.eclipse.e4.tools</tycho.scmUrl>
+	</properties>
+
  <repositories>
     <repository>
       <releases>
@@ -62,4 +66,27 @@
     <module>./features/org.eclipse.e4.tools.event.spy.feature</module>
     <module>./build/org.eclipse.e4.core.tools.update/</module>
   </modules>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.tycho</groupId>
+				<artifactId>tycho-packaging-plugin</artifactId>
+				<version>${tycho.version}</version>
+				<configuration>
+					<sourceReferences>
+						<generate>true</generate>
+					</sourceReferences>
+				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>org.eclipse.tycho.extras</groupId>
+						<artifactId>tycho-sourceref-jgit</artifactId>
+						<version>${tycho-extras.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+	</build>
+
 </project>
