@@ -8,6 +8,7 @@
  * Contributors:
  *     Tom Schindl <tom.schindl@bestsolution.at> - initial API and implementation
  *     Lars Vogel <lars.vogel@gmail.com> - Bug 419723
+ *     Markus A. Kuppe <bugs.eclipse.org@lemmster.de> - Bug 421259
  ******************************************************************************/
 package org.eclipse.e4.tools.emf.liveeditor;
 
@@ -15,6 +16,8 @@ import java.util.List;
 
 import org.eclipse.e4.core.di.annotations.Execute;
 import org.eclipse.e4.ui.model.application.MApplication;
+import org.eclipse.e4.ui.model.application.commands.MBindingContext;
+import org.eclipse.e4.ui.model.application.commands.MBindingTable;
 import org.eclipse.e4.ui.model.application.commands.MCommand;
 import org.eclipse.e4.ui.model.application.commands.MHandler;
 import org.eclipse.e4.ui.model.application.commands.MKeyBinding;
@@ -57,24 +60,43 @@ public class ModelProcessor {
 
 		MKeyBinding binding = null;
 
-		if (application.getBindingTables().size() > 0) {
-			List<MKeyBinding> keyBindings = modelService.findElements(
-					application, "e4.tooling.livemodel.binding",
-					MKeyBinding.class, null);
-
-			if (keyBindings.size() == 0) {
-				binding = modelService.createModelElement(MKeyBinding.class);
-				binding.setElementId("e4.tooling.livemodel.binding");
-				binding.setKeySequence("ALT+SHIFT+F9");
-				if (application.getBindingTables().size() > 0) {
-					application.getBindingTables().get(0).getBindings()
-							.add(binding);
-				}
+		if (application.getBindingTables().size() <= 0) {
+			MBindingContext bc = null;
+			final List<MBindingContext> bindingContexts = application.getBindingContexts();
+			if (bindingContexts.size() == 0) {
+				bc = modelService.createModelElement(MBindingContext.class);
+				bc.setElementId("org.eclipse.ui.contexts.window");
 			} else {
-				binding = keyBindings.get(0);
+				// Prefer org.eclipse.ui.contexts.dialogAndWindow but randomly select another one
+				// if org.eclipse.ui.contexts.dialogAndWindow cannot be found
+				for (MBindingContext aBindingContext : bindingContexts) {
+					bc = aBindingContext;
+					if ("org.eclipse.ui.contexts.dialogAndWindow".equals(aBindingContext.getElementId())) {
+						break;
+					}
+				}
 			}
-			binding.setCommand(command);
+			MBindingTable bt = modelService.createModelElement(MBindingTable.class);
+			bt.setElementId("e4.tooling.livemodel.bindingTable");
+			bt.setBindingContext(bc);
+			application.getBindingTables().add(bt);
 		}
+		List<MKeyBinding> keyBindings = modelService.findElements(
+				application, "e4.tooling.livemodel.binding",
+				MKeyBinding.class, null);
+
+		if (keyBindings.size() == 0) {
+			binding = modelService.createModelElement(MKeyBinding.class);
+			binding.setElementId("e4.tooling.livemodel.binding");
+			binding.setKeySequence("ALT+SHIFT+F9");
+			if (application.getBindingTables().size() > 0) {
+				application.getBindingTables().get(0).getBindings()
+						.add(binding);
+			}
+		} else {
+			binding = keyBindings.get(0);
+		}
+		binding.setCommand(command);
 
 		MPartDescriptor descriptor = null;
 		List<MPartDescriptor> descriptors = modelService.findElements(
