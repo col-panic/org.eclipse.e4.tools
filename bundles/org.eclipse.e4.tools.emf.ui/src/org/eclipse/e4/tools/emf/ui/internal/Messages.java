@@ -7,7 +7,11 @@
  *
  * Contributors:
  *     Tom Schindl <tom.schindl@bestsolution.at> - initial API and implementation
+<<<<<<< HEAD
  *     Marco Descher <marco@descher.at> - Bug 395982, Bug 396975
+=======
+ *     Marco Descher <marco@descher.at> - Bug 395982
+>>>>>>> 0ffac1d946c4b0b6d373205c9da9d6ad432c7875
  ******************************************************************************/
 package org.eclipse.e4.tools.emf.ui.internal;
 

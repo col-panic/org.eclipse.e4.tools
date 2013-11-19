@@ -31,7 +31,10 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.ui.JavaUI;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.StructuredSelection;
+<<<<<<< HEAD
 import org.eclipse.jface.window.Window;
+=======
+>>>>>>> 0ffac1d946c4b0b6d373205c9da9d6ad432c7875
 import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
@@ -49,7 +52,11 @@ public class DynamicMenuContributionContributionEditor implements
 			NewDynamicMenuContributionClassWizard wizard = new NewDynamicMenuContributionClassWizard(contribution.getContributionURI());
 			wizard.init( null, new StructuredSelection(project));
 			WizardDialog dialog = new WizardDialog(shell, wizard);
+<<<<<<< HEAD
 			if( dialog.open() == Window.OK ) {
+=======
+			if( dialog.open() == WizardDialog.OK ) {
+>>>>>>> 0ffac1d946c4b0b6d373205c9da9d6ad432c7875
 				IFile f = wizard.getFile();
 				ICompilationUnit el = JavaCore.createCompilationUnitFrom(f);
 				try {

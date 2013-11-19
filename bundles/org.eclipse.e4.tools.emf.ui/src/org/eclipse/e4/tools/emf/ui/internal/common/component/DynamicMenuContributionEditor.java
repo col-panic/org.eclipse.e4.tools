@@ -178,7 +178,10 @@ public class DynamicMenuContributionEditor extends AbstractComponentEditor {
 			t.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 			t.addModifyListener(new ModifyListener() {
 
+<<<<<<< HEAD
 				@Override
+=======
+>>>>>>> 0ffac1d946c4b0b6d373205c9da9d6ad432c7875
 				public void modifyText(ModifyEvent e) {
 					lnk.setToolTipText(((Text) (e.getSource())).getText());
 				}
